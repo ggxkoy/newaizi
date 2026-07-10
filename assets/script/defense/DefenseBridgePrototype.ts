@@ -13,6 +13,7 @@ import {
     Label,
     MeshRenderer,
     Node,
+    ParticleSystem,
     Prefab,
     resources,
     SkeletalAnimation,
@@ -30,8 +31,10 @@ interface MovingTarget {
     boss: boolean;
 }
 
-const LEFT_LANE_X = -1.65;
-const RIGHT_LANE_X = 1.65;
+// 相机从桥尾朝 +z 方向看，所以世界 +x 在画面左侧：
+// 画面左路（升级道具）用 +x，画面右路（敌人/boss）用 -x
+const LEFT_LANE_X = 1.65;
+const RIGHT_LANE_X = -1.65;
 const PLAYER_Z = -4.2;
 const PLAYER_X_LIMIT = 2.55;
 const BULLET_RANGE = 14;
@@ -47,6 +50,9 @@ const BOSS_IDLE_CLIP = 'bossFightIdle';
 const BOSS_DIE_CLIP = 'bossDie';
 const CORPSE_FALLBACK_SECONDS = 5;
 
+// 与 manRed01.mtl 相同的敌人红色
+const ENEMY_COLOR = new Color(253, 69, 69, 255);
+
 @ccclass('DefenseBridgePrototype')
 export class DefenseBridgePrototype extends Component {
     private readonly bullets: Node[] = [];
@@ -55,6 +61,7 @@ export class DefenseBridgePrototype extends Component {
     private player: Node | null = null;
     private upgradeProp: Node | null = null;
     private bulletPrefab: Prefab | null = null;
+    private tracerPrefab: Prefab | null = null;
     private statusLabel: Label | null = null;
     private bossLabel: Label | null = null;
     private fireTimer = 0;
@@ -104,11 +111,12 @@ export class DefenseBridgePrototype extends Component {
         if (!scene) {
             throw new Error('DefenseBridgePrototype: active scene is required.');
         }
-        const [playerPrefab, roadPrefab, propPrefab, bulletPrefab] = await Promise.all([
+        const [playerPrefab, roadPrefab, propPrefab, bulletPrefab, tracerPrefab] = await Promise.all([
             this.loadPrefab('prefab/model/man/player'),
             this.loadPrefab('map/road/road01'),
             this.loadPrefab('map/box/box'),
             this.loadPrefab('map/diamond/diamond'),
+            this.loadPrefab('prefab/effect/flyLight/flyLight'),
         ]);
         const root = new Node('DefenseBridge');
         scene.addChild(root);
@@ -118,6 +126,7 @@ export class DefenseBridgePrototype extends Component {
         this.createPlayer(root, playerPrefab);
         this.createUpgradeProp(root, propPrefab);
         this.bulletPrefab = bulletPrefab;
+        this.tracerPrefab = tracerPrefab;
         input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
         this.initialized = true;
         this.refreshHud();
@@ -169,6 +178,8 @@ export class DefenseBridgePrototype extends Component {
         root.addChild(player);
         player.setPosition(0, 0, PLAYER_Z);
         player.setScale(0.9, 0.9, 0.9);
+        // 小人模型默认朝 -z（面向镜头），转身面向 +z 的来敌方向
+        player.setRotationFromEuler(0, 180, 0);
         this.player = player;
         this.playClip(player, PLAYER_IDLE_CLIP, true);
     }
@@ -184,7 +195,8 @@ export class DefenseBridgePrototype extends Component {
 
     private stripNonVisualComponents(node: Node): void {
         for (const component of node.getComponentsInChildren(Component)) {
-            if (component instanceof MeshRenderer || component instanceof SkinnedMeshRenderer || component instanceof SkeletalAnimation) {
+            if (component instanceof MeshRenderer || component instanceof SkinnedMeshRenderer
+                || component instanceof SkeletalAnimation || component instanceof ParticleSystem) {
                 continue;
             }
             // 必须销毁而不是禁用：动画 clip 上的帧事件（onFrameAttackLeft 等）会按函数名
@@ -233,7 +245,8 @@ export class DefenseBridgePrototype extends Component {
         if (!this.player) {
             return;
         }
-        const nextX = Math.max(-PLAYER_X_LIMIT, Math.min(PLAYER_X_LIMIT, this.player.position.x + event.getUIDelta().x * 0.012));
+        // 世界 +x 在画面左侧，手指右滑（UI delta 为正）应向世界 -x 移动
+        const nextX = Math.max(-PLAYER_X_LIMIT, Math.min(PLAYER_X_LIMIT, this.player.position.x - event.getUIDelta().x * 0.012));
         this.player.setPosition(nextX, this.player.position.y, PLAYER_Z);
     }
 
@@ -241,11 +254,17 @@ export class DefenseBridgePrototype extends Component {
         if (!this.player || !this.bulletPrefab) {
             return;
         }
-        const bullet = instantiate(this.bulletPrefab);
-        this.stripNonVisualComponents(bullet);
+        // 外层节点保持 scale 1，让拖尾粒子不被子弹本体的缩放压小
+        const bullet = new Node('DefenseBullet');
+        const core = instantiate(this.bulletPrefab);
+        this.stripNonVisualComponents(core);
+        core.setScale(0.3, 0.3, 0.3);
+        bullet.addChild(core);
+        if (this.tracerPrefab) {
+            bullet.addChild(instantiate(this.tracerPrefab));
+        }
         this.player.parent?.addChild(bullet);
         bullet.setPosition(this.player.position.x, 0.9, this.player.position.z + 0.65);
-        bullet.setScale(0.16, 0.16, 0.16);
         this.bullets.push(bullet);
         this.playShootAnimation();
     }
@@ -265,7 +284,7 @@ export class DefenseBridgePrototype extends Component {
     }
 
     private async spawnEnemy(boss: boolean): Promise<void> {
-        const prefab = await this.loadPrefab(boss ? 'map/people/peopleBoss' : 'prefab/model/man/player');
+        const prefab = await this.loadPrefab(boss ? 'map/people/peopleBoss' : 'map/people/peopleEnemy');
         if (!this.initialized || !this.player?.parent) {
             return;
         }
@@ -276,9 +295,18 @@ export class DefenseBridgePrototype extends Component {
         // boss 预制体（bossAll.FBX）本身就比小人大，不再额外放大
         const scale = boss ? 1 : 0.82;
         node.setScale(scale, scale, scale);
-        node.setRotationFromEuler(0, 180, 0);
+        // 模型默认朝 -z，正好面向桥尾的主角，无需转身
+        if (!boss) {
+            this.tintCharacter(node, ENEMY_COLOR);
+        }
         this.playClip(node, boss ? BOSS_IDLE_CLIP : ENEMY_RUN_CLIP, true);
         this.enemies.push({ node, hp: boss ? 20 : 1, speed: boss ? 0.8 : 1.35, boss });
+    }
+
+    private tintCharacter(characterRoot: Node, color: Color): void {
+        const renderer = characterRoot.getComponentInChildren(SkinnedMeshRenderer);
+        // peopleEnemy 的材质（manEnemy.mtl）无贴图、由 mainColor 决定颜色，改实例属性即可
+        renderer?.getMaterialInstance(0)?.setProperty('mainColor', color);
     }
 
     private moveBullets(deltaTime: number): void {
