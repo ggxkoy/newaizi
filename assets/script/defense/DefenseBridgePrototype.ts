@@ -1,5 +1,6 @@
 import {
     _decorator,
+    AnimationClip,
     Camera,
     Color,
     Component,
@@ -37,6 +38,15 @@ const BULLET_RANGE = 14;
 const BULLET_SPEED = 10;
 const ENEMIES_BEFORE_BOSS = 8;
 
+// 小人（manAll.FBX）与 boss（bossAll.FBX）自带的骨骼动画 clip 名
+const PLAYER_IDLE_CLIP = 'fightIdle';
+const PLAYER_ATTACK_CLIPS = ['attackLeft', 'attackRight'];
+const ENEMY_RUN_CLIP = 'run';
+const ENEMY_DIE_CLIP = 'die';
+const BOSS_IDLE_CLIP = 'bossFightIdle';
+const BOSS_DIE_CLIP = 'bossDie';
+const CORPSE_FALLBACK_SECONDS = 5;
+
 @ccclass('DefenseBridgePrototype')
 export class DefenseBridgePrototype extends Component {
     private readonly bullets: Node[] = [];
@@ -49,6 +59,7 @@ export class DefenseBridgePrototype extends Component {
     private bossLabel: Label | null = null;
     private fireTimer = 0;
     private spawnTimer = 0;
+    private attackClipIndex = 0;
     private upgradeHp = 8;
     private damage = 1;
     private fireInterval = 0.42;
@@ -144,7 +155,7 @@ export class DefenseBridgePrototype extends Component {
         for (const laneX of [LEFT_LANE_X, RIGHT_LANE_X]) {
             for (let segment = 0; segment < 5; segment += 1) {
                 const road = instantiate(roadPrefab);
-                this.disableNonVisualComponents(road);
+                this.stripNonVisualComponents(road);
                 root.addChild(road);
                 road.setPosition(laneX, 0, segment * 5.2 - 1);
                 road.setScale(0.88, 1, 1.15);
@@ -154,29 +165,46 @@ export class DefenseBridgePrototype extends Component {
 
     private createPlayer(root: Node, playerPrefab: Prefab): void {
         const player = instantiate(playerPrefab);
-        this.disableNonVisualComponents(player);
+        this.stripNonVisualComponents(player);
         root.addChild(player);
         player.setPosition(0, 0, PLAYER_Z);
         player.setScale(0.9, 0.9, 0.9);
         this.player = player;
+        this.playClip(player, PLAYER_IDLE_CLIP, true);
     }
 
     private createUpgradeProp(root: Node, propPrefab: Prefab): void {
         const prop = instantiate(propPrefab);
-        this.disableNonVisualComponents(prop);
+        this.stripNonVisualComponents(prop);
         root.addChild(prop);
         prop.setPosition(LEFT_LANE_X, 0.1, 5.2);
         prop.setScale(0.9, 0.9, 0.9);
         this.upgradeProp = prop;
     }
 
-    private disableNonVisualComponents(node: Node): void {
+    private stripNonVisualComponents(node: Node): void {
         for (const component of node.getComponentsInChildren(Component)) {
             if (component instanceof MeshRenderer || component instanceof SkinnedMeshRenderer || component instanceof SkeletalAnimation) {
                 continue;
             }
-            component.enabled = false;
+            // 必须销毁而不是禁用：动画 clip 上的帧事件（onFrameAttackLeft 等）会按函数名
+            // 调用节点上所有组件的方法，旧跑酷脚本的这些方法依赖跑酷全局对象，在防守场景会报错
+            component.destroy();
         }
+    }
+
+    private playClip(characterRoot: Node, clipName: string, loop: boolean, onFinished?: () => void): boolean {
+        const animation = characterRoot.getComponent(SkeletalAnimation) ?? characterRoot.getComponentInChildren(SkeletalAnimation);
+        const state = animation?.getState(clipName);
+        if (!animation || !state) {
+            return false;
+        }
+        state.wrapMode = loop ? AnimationClip.WrapMode.Loop : AnimationClip.WrapMode.Normal;
+        animation.play(clipName);
+        if (!loop && onFinished) {
+            animation.once(SkeletalAnimation.EventType.FINISHED, onFinished);
+        }
+        return true;
     }
 
     private createHud(): void {
@@ -214,25 +242,42 @@ export class DefenseBridgePrototype extends Component {
             return;
         }
         const bullet = instantiate(this.bulletPrefab);
-        this.disableNonVisualComponents(bullet);
+        this.stripNonVisualComponents(bullet);
         this.player.parent?.addChild(bullet);
         bullet.setPosition(this.player.position.x, 0.9, this.player.position.z + 0.65);
         bullet.setScale(0.16, 0.16, 0.16);
         this.bullets.push(bullet);
+        this.playShootAnimation();
+    }
+
+    private playShootAnimation(): void {
+        const player = this.player;
+        if (!player) {
+            return;
+        }
+        const clip = PLAYER_ATTACK_CLIPS[this.attackClipIndex];
+        this.attackClipIndex = (this.attackClipIndex + 1) % PLAYER_ATTACK_CLIPS.length;
+        this.playClip(player, clip, false, () => {
+            if (player.isValid && this.player === player) {
+                this.playClip(player, PLAYER_IDLE_CLIP, true);
+            }
+        });
     }
 
     private async spawnEnemy(boss: boolean): Promise<void> {
-        const playerPrefab = await this.loadPrefab('prefab/model/man/player');
+        const prefab = await this.loadPrefab(boss ? 'map/people/peopleBoss' : 'prefab/model/man/player');
         if (!this.initialized || !this.player?.parent) {
             return;
         }
-        const node = instantiate(playerPrefab);
-        this.disableNonVisualComponents(node);
+        const node = instantiate(prefab);
+        this.stripNonVisualComponents(node);
         this.player.parent.addChild(node);
         node.setPosition(RIGHT_LANE_X, 0, boss ? 20 : 17);
-        const scale = boss ? 1.35 : 0.82;
+        // boss 预制体（bossAll.FBX）本身就比小人大，不再额外放大
+        const scale = boss ? 1 : 0.82;
         node.setScale(scale, scale, scale);
         node.setRotationFromEuler(0, 180, 0);
+        this.playClip(node, boss ? BOSS_IDLE_CLIP : ENEMY_RUN_CLIP, true);
         this.enemies.push({ node, hp: boss ? 20 : 1, speed: boss ? 0.8 : 1.35, boss });
     }
 
@@ -286,15 +331,34 @@ export class DefenseBridgePrototype extends Component {
                 bullet.destroy();
                 this.bullets.splice(bulletIndex, 1);
                 if (enemy.hp <= 0) {
-                    enemy.node.destroy();
                     this.enemies.splice(enemyIndex, 1);
                     if (!enemy.boss) {
                         this.kills += 1;
                     }
+                    this.playDeath(enemy);
                 }
                 break;
             }
         }
+    }
+
+    private playDeath(target: MovingTarget): void {
+        const node = target.node;
+        const played = this.playClip(node, target.boss ? BOSS_DIE_CLIP : ENEMY_DIE_CLIP, false, () => {
+            if (node.isValid) {
+                node.destroy();
+            }
+        });
+        if (!played) {
+            node.destroy();
+            return;
+        }
+        // FINISHED 事件在极端情况下可能收不到（如动画被打断），兜底清理尸体
+        this.scheduleOnce(() => {
+            if (node.isValid) {
+                node.destroy();
+            }
+        }, CORPSE_FALLBACK_SECONDS);
     }
 
     private refreshHud(): void {
