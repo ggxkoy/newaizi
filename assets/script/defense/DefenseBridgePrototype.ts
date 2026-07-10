@@ -39,7 +39,24 @@ const PLAYER_Z = -4.2;
 const PLAYER_X_LIMIT = 2.55;
 const BULLET_RANGE = 14;
 const BULLET_SPEED = 10;
-const ENEMIES_BEFORE_BOSS = 8;
+const ENEMIES_BEFORE_BOSS = 12;
+
+// road01（"低直路"）模块沿 z 长度为 1 个单位，按缩放后的步长首尾相接铺成连续桥面
+const ROAD_Z_SCALE = 1.2;
+const BRIDGE_START_Z = -8;
+const BRIDGE_END_Z = 22;
+
+// 每波小兵在右路车道内的散布（车道中心为原点）
+const WAVE_OFFSETS = [
+    { x: 0, z: 0 },
+    { x: -0.45, z: 0.8 },
+    { x: 0.45, z: 1.5 },
+];
+const WAVE_INTERVAL = 1.8;
+
+// 头顶血量数字相对角色/道具原点的高度
+const PROP_LABEL_HEIGHT = 1.6;
+const BOSS_LABEL_HEIGHT = 2.8;
 
 // 小人（manAll.FBX）与 boss（bossAll.FBX）自带的骨骼动画 clip 名
 const PLAYER_IDLE_CLIP = 'fightIdle';
@@ -63,7 +80,11 @@ export class DefenseBridgePrototype extends Component {
     private bulletPrefab: Prefab | null = null;
     private tracerPrefab: Prefab | null = null;
     private statusLabel: Label | null = null;
-    private bossLabel: Label | null = null;
+    private propHpLabel: Label | null = null;
+    private bossHpLabel: Label | null = null;
+    private camera: Camera | null = null;
+    private canvas: Node | null = null;
+    private readonly uiPosition = new Vec3();
     private fireTimer = 0;
     private spawnTimer = 0;
     private attackClipIndex = 0;
@@ -72,6 +93,7 @@ export class DefenseBridgePrototype extends Component {
     private fireInterval = 0.42;
     private kills = 0;
     private bossSpawned = false;
+    private bossDefeated = false;
     private initialized = false;
 
     protected start(): void {
@@ -88,9 +110,11 @@ export class DefenseBridgePrototype extends Component {
             this.fireTimer = 0;
             this.fireBullet();
         }
-        if (!this.bossSpawned && this.spawnTimer >= 1.2) {
+        if (!this.bossSpawned && this.spawnTimer >= WAVE_INTERVAL) {
             this.spawnTimer = 0;
-            void this.spawnEnemy(false);
+            for (const offset of WAVE_OFFSETS) {
+                void this.spawnEnemy(false, offset.x, offset.z);
+            }
         }
         this.moveBullets(deltaTime);
         this.moveEnemies(deltaTime);
@@ -152,22 +176,24 @@ export class DefenseBridgePrototype extends Component {
         }
         const cameraNode = new Node('DefenseCamera');
         root.addChild(cameraNode);
-        cameraNode.setPosition(0, 7.2, -13.5);
-        cameraNode.lookAt(new Vec3(0, 0.7, 6.5));
+        // 拉近、抬高并压低看向点，让双桥充满竖屏（参考视频的近俯视构图）
+        cameraNode.setPosition(0, 8.2, -10.8);
+        cameraNode.lookAt(new Vec3(0, 0, 2.5));
         const camera = cameraNode.addComponent(Camera);
         camera.priority = 1;
         camera.visibility = 0xffffffff;
         camera.clearColor = new Color(95, 154, 201, 255);
+        this.camera = camera;
     }
 
     private createBridge(root: Node, roadPrefab: Prefab): void {
         for (const laneX of [LEFT_LANE_X, RIGHT_LANE_X]) {
-            for (let segment = 0; segment < 5; segment += 1) {
+            for (let z = BRIDGE_START_Z; z <= BRIDGE_END_Z; z += ROAD_Z_SCALE) {
                 const road = instantiate(roadPrefab);
                 this.stripNonVisualComponents(road);
                 root.addChild(road);
-                road.setPosition(laneX, 0, segment * 5.2 - 1);
-                road.setScale(0.88, 1, 1.15);
+                road.setPosition(laneX, 0, z);
+                road.setScale(0.88, 1, ROAD_Z_SCALE);
             }
         }
     }
@@ -224,8 +250,13 @@ export class DefenseBridgePrototype extends Component {
         if (!canvas) {
             throw new Error('DefenseBridgePrototype: Canvas is required for the HUD.');
         }
-        this.statusLabel = this.createLabel(canvas, 0, 550, 28, Color.WHITE);
-        this.bossLabel = this.createLabel(canvas, 0, 488, 36, new Color(255, 229, 100, 255));
+        this.canvas = canvas;
+        this.statusLabel = this.createLabel(canvas, 0, 480, 30, Color.WHITE);
+        // 道具/boss 的血量数字跟随各自头顶（世界坐标每帧转换到 UI 坐标）
+        this.propHpLabel = this.createLabel(canvas, 0, 0, 40, Color.WHITE);
+        this.bossHpLabel = this.createLabel(canvas, 0, 0, 46, new Color(255, 229, 100, 255));
+        this.propHpLabel.node.active = false;
+        this.bossHpLabel.node.active = false;
     }
 
     private createLabel(parent: Node, x: number, y: number, fontSize: number, color: Color): Label {
@@ -283,7 +314,7 @@ export class DefenseBridgePrototype extends Component {
         });
     }
 
-    private async spawnEnemy(boss: boolean): Promise<void> {
+    private async spawnEnemy(boss: boolean, offsetX = 0, offsetZ = 0): Promise<void> {
         const prefab = await this.loadPrefab(boss ? 'map/people/peopleBoss' : 'map/people/peopleEnemy');
         if (!this.initialized || !this.player?.parent) {
             return;
@@ -291,7 +322,7 @@ export class DefenseBridgePrototype extends Component {
         const node = instantiate(prefab);
         this.stripNonVisualComponents(node);
         this.player.parent.addChild(node);
-        node.setPosition(RIGHT_LANE_X, 0, boss ? 20 : 17);
+        node.setPosition(RIGHT_LANE_X + offsetX, 0, (boss ? 20 : 17) + offsetZ);
         // boss 预制体（bossAll.FBX）本身就比小人大，不再额外放大
         const scale = boss ? 1 : 0.82;
         node.setScale(scale, scale, scale);
@@ -360,7 +391,9 @@ export class DefenseBridgePrototype extends Component {
                 this.bullets.splice(bulletIndex, 1);
                 if (enemy.hp <= 0) {
                     this.enemies.splice(enemyIndex, 1);
-                    if (!enemy.boss) {
+                    if (enemy.boss) {
+                        this.bossDefeated = true;
+                    } else {
                         this.kills += 1;
                     }
                     this.playDeath(enemy);
@@ -391,11 +424,35 @@ export class DefenseBridgePrototype extends Component {
 
     private refreshHud(): void {
         if (this.statusLabel) {
-            this.statusLabel.string = `LEFT PROP HP ${this.upgradeHp > 0 ? this.upgradeHp : 'COLLECTED'}   DMG ${this.damage}   FIRE ${this.fireInterval.toFixed(2)}s`;
+            let progress: string;
+            if (this.bossDefeated) {
+                progress = 'BOSS 已击败！';
+            } else if (this.bossSpawned) {
+                progress = 'BOSS 来袭';
+            } else {
+                progress = `击杀 ${this.kills}/${ENEMIES_BEFORE_BOSS}`;
+            }
+            this.statusLabel.string = `伤害 ${this.damage} · 射速 ${(1 / this.fireInterval).toFixed(1)}/s · ${progress}`;
         }
+        const prop = this.upgradeProp && this.upgradeHp > 0 ? this.upgradeProp : null;
+        this.updateOverheadLabel(this.propHpLabel, prop, PROP_LABEL_HEIGHT, `${this.upgradeHp}`);
         const boss = this.enemies.find((enemy) => enemy.boss);
-        if (this.bossLabel) {
-            this.bossLabel.string = boss ? `BOSS HP ${boss.hp}` : this.bossSpawned ? 'BOSS DEFEATED' : `RIGHT LANE ENEMIES ${this.kills}/${ENEMIES_BEFORE_BOSS}`;
+        this.updateOverheadLabel(this.bossHpLabel, boss?.node ?? null, BOSS_LABEL_HEIGHT, boss ? `${boss.hp}` : '');
+    }
+
+    private updateOverheadLabel(label: Label | null, target: Node | null, height: number, text: string): void {
+        if (!label) {
+            return;
         }
+        if (!target || !target.isValid || !this.camera || !this.canvas) {
+            label.node.active = false;
+            return;
+        }
+        label.node.active = true;
+        label.string = text;
+        this.tempPosition.set(target.worldPosition);
+        this.tempPosition.y += height;
+        this.camera.convertToUINode(this.tempPosition, this.canvas, this.uiPosition);
+        label.node.setPosition(this.uiPosition);
     }
 }
