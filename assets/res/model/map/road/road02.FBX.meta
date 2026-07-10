@@ -1,0 +1,123 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "10a1e470-c6b3-4742-b109-1aeb697fdcf6",
+  "files": [],
+  "subMetas": {
+    "17f98": {
+      "importer": "gltf-mesh",
+      "uuid": "10a1e470-c6b3-4742-b109-1aeb697fdcf6@17f98",
+      "displayName": "",
+      "id": "17f98",
+      "name": "road02C.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 884
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "0267f": {
+      "importer": "gltf-mesh",
+      "uuid": "10a1e470-c6b3-4742-b109-1aeb697fdcf6@0267f",
+      "displayName": "",
+      "id": "0267f",
+      "name": "road02A.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 108
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e928f": {
+      "importer": "gltf-mesh",
+      "uuid": "10a1e470-c6b3-4742-b109-1aeb697fdcf6@e928f",
+      "displayName": "",
+      "id": "e928f",
+      "name": "road02B.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 884
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "70daa": {
+      "importer": "gltf-scene",
+      "uuid": "10a1e470-c6b3-4742-b109-1aeb697fdcf6@70daa",
+      "displayName": "",
+      "id": "70daa",
+      "name": "road02.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "10a1e470-c6b3-4742-b109-1aeb697fdcf6@17f98",
+        "10a1e470-c6b3-4742-b109-1aeb697fdcf6@0267f",
+        "10a1e470-c6b3-4742-b109-1aeb697fdcf6@e928f"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "47baa7c0-a2a4-43e6-88e9-6e52b6c3dbee"
+      ],
+      "scenes": [
+        "10a1e470-c6b3-4742-b109-1aeb697fdcf6@70daa"
+      ]
+    },
+    "disableMeshSplit": true,
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/map/road",
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

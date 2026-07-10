@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "70e4ae4c-8e4e-477f-9b7a-64c678f3d1e1",
+  "files": [],
+  "subMetas": {
+    "e3734": {
+      "importer": "gltf-mesh",
+      "uuid": "70e4ae4c-8e4e-477f-9b7a-64c678f3d1e1@e3734",
+      "displayName": "",
+      "id": "e3734",
+      "name": "waterPlane.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 2
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d2406": {
+      "importer": "gltf-scene",
+      "uuid": "70e4ae4c-8e4e-477f-9b7a-64c678f3d1e1@d2406",
+      "displayName": "",
+      "id": "d2406",
+      "name": "waterPlane.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "dumpMaterials": true,
+    "disableMeshSplit": true,
+    "materialDumpDir": "db://assets/res/model/map/water",
+    "assetFinder": {
+      "meshes": [
+        "70e4ae4c-8e4e-477f-9b7a-64c678f3d1e1@e3734"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "1ee17802-c7a6-4ee7-a44b-f21567921caf"
+      ],
+      "scenes": [
+        "70e4ae4c-8e4e-477f-9b7a-64c678f3d1e1@d2406"
+      ]
+    },
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

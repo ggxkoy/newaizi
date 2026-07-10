@@ -1,0 +1,161 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688",
+  "files": [],
+  "subMetas": {
+    "f6fe2": {
+      "importer": "gltf-mesh",
+      "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688@f6fe2",
+      "displayName": "",
+      "id": "f6fe2",
+      "name": "organDoor.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 90
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d9331": {
+      "importer": "gltf-mesh",
+      "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688@d9331",
+      "displayName": "",
+      "id": "d9331",
+      "name": "organDoor01.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 24
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "12c9c": {
+      "importer": "gltf-mesh",
+      "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688@12c9c",
+      "displayName": "",
+      "id": "12c9c",
+      "name": "organDoor02.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 24
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5d55c": {
+      "importer": "gltf-mesh",
+      "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688@5d55c",
+      "displayName": "",
+      "id": "5d55c",
+      "name": "organDoor04.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 24
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "08ad5": {
+      "importer": "gltf-mesh",
+      "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688@08ad5",
+      "displayName": "",
+      "id": "08ad5",
+      "name": "organDoor03.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 24
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9ff9c": {
+      "importer": "gltf-scene",
+      "uuid": "3dc70bcf-0c96-49a9-887d-a9e90d44a688@9ff9c",
+      "displayName": "",
+      "id": "9ff9c",
+      "name": "organDoor.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "3dc70bcf-0c96-49a9-887d-a9e90d44a688@f6fe2",
+        "3dc70bcf-0c96-49a9-887d-a9e90d44a688@d9331",
+        "3dc70bcf-0c96-49a9-887d-a9e90d44a688@12c9c",
+        "3dc70bcf-0c96-49a9-887d-a9e90d44a688@5d55c",
+        "3dc70bcf-0c96-49a9-887d-a9e90d44a688@08ad5"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "341ca2cb-e49b-4621-b875-864bcee45aaf"
+      ],
+      "scenes": [
+        "3dc70bcf-0c96-49a9-887d-a9e90d44a688@9ff9c"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/map/mechanism/organDoor",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

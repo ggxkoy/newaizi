@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "6fb6cbf2-8a69-4e1b-a944-b34c0fd57750",
+  "files": [],
+  "subMetas": {
+    "7ef92": {
+      "importer": "gltf-mesh",
+      "uuid": "6fb6cbf2-8a69-4e1b-a944-b34c0fd57750@7ef92",
+      "displayName": "",
+      "id": "7ef92",
+      "name": "shoes.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 326
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "34af5": {
+      "importer": "gltf-scene",
+      "uuid": "6fb6cbf2-8a69-4e1b-a944-b34c0fd57750@34af5",
+      "displayName": "",
+      "id": "34af5",
+      "name": "shoes.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "6fb6cbf2-8a69-4e1b-a944-b34c0fd57750@7ef92"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "e90c7219-251f-47ff-b52f-27e3d64eb060"
+      ],
+      "scenes": [
+        "6fb6cbf2-8a69-4e1b-a944-b34c0fd57750@34af5"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/adornment",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

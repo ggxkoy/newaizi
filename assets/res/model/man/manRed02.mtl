@@ -1,0 +1,79 @@
+{
+  "__type__": "cc.Material",
+  "_name": "",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "f38bba13-68fe-4786-ac10-f324148af80d"
+  },
+  "_techIdx": 0,
+  "_defines": [
+    {},
+    {},
+    {}
+  ],
+  "_states": [
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    },
+    {},
+    {}
+  ],
+  "_props": [
+    {
+      "tilingOffset2": {
+        "__type__": "cc.Vec4",
+        "x": 1,
+        "y": 1,
+        "z": 0,
+        "w": 0
+      },
+      "mainColor": {
+        "__type__": "cc.Color",
+        "r": 255,
+        "g": 0,
+        "b": 0,
+        "a": 255
+      },
+      "albedoScale": {
+        "__type__": "cc.Vec3",
+        "x": 0.588235318660736,
+        "y": 0.588235318660736,
+        "z": 0.588235318660736
+      },
+      "occlusion": 0.4,
+      "roughness": 1,
+      "highlightColor": {
+        "__type__": "cc.Color",
+        "r": 255,
+        "g": 54,
+        "b": 54,
+        "a": 255
+      },
+      "Fresnelcol": {
+        "__type__": "cc.Color",
+        "r": 255,
+        "g": 5,
+        "b": 5,
+        "a": 255
+      },
+      "_fresnelIndensity": 0.6,
+      "metallic": 0.8,
+      "emissive": {
+        "__type__": "cc.Color",
+        "r": 255,
+        "g": 15,
+        "b": 15,
+        "a": 255
+      }
+    },
+    {},
+    {}
+  ]
+}

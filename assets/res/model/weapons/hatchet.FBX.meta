@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "735b4c04-0a3d-4f20-8cd4-a7e59e50d36b",
+  "files": [],
+  "subMetas": {
+    "1e692": {
+      "importer": "gltf-mesh",
+      "uuid": "735b4c04-0a3d-4f20-8cd4-a7e59e50d36b@1e692",
+      "displayName": "",
+      "id": "1e692",
+      "name": "hatchet.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 196
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "963e8": {
+      "importer": "gltf-scene",
+      "uuid": "735b4c04-0a3d-4f20-8cd4-a7e59e50d36b@963e8",
+      "displayName": "",
+      "id": "963e8",
+      "name": "hatchet.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "735b4c04-0a3d-4f20-8cd4-a7e59e50d36b@1e692"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "5cc23593-3844-4c10-92e8-09a578b95a98"
+      ],
+      "scenes": [
+        "735b4c04-0a3d-4f20-8cd4-a7e59e50d36b@963e8"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/weapons",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

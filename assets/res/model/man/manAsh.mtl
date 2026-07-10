@@ -1,0 +1,84 @@
+{
+  "__type__": "cc.Material",
+  "_name": "",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "f38bba13-68fe-4786-ac10-f324148af80d"
+  },
+  "_techIdx": 0,
+  "_defines": [
+    {
+      "USE_ALBEDO_MAP": true
+    },
+    {},
+    {}
+  ],
+  "_states": [
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    },
+    {},
+    {}
+  ],
+  "_props": [
+    {
+      "tilingOffset2": {
+        "__type__": "cc.Vec4",
+        "x": 1,
+        "y": 1,
+        "z": 0,
+        "w": 0
+      },
+      "mainColor": {
+        "__type__": "cc.Color",
+        "r": 53,
+        "g": 99,
+        "b": 86,
+        "a": 150
+      },
+      "albedoScale": {
+        "__type__": "cc.Vec3",
+        "x": 0.588235318660736,
+        "y": 0.588235318660736,
+        "z": 0.588235318660736
+      },
+      "occlusion": 0.6,
+      "roughness": 0.6,
+      "highlightColor": {
+        "__type__": "cc.Color",
+        "r": 89,
+        "g": 136,
+        "b": 143,
+        "a": 150
+      },
+      "Fresnelcol": {
+        "__type__": "cc.Color",
+        "r": 12,
+        "g": 52,
+        "b": 58,
+        "a": 150
+      },
+      "_fresnelScale": 0.6,
+      "_fresnelIndensity": 0.8,
+      "emissive": {
+        "__type__": "cc.Color",
+        "r": 44,
+        "g": 45,
+        "b": 46,
+        "a": 150
+      },
+      "mainTexture": {
+        "__uuid__": "0fe37408-02eb-45ea-9f6f-1739640f42f3@6c48a"
+      }
+    },
+    {},
+    {}
+  ]
+}

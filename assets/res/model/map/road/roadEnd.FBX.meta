@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "1943bfa3-b831-4c5f-b68e-22ac60ef8d1c",
+  "files": [],
+  "subMetas": {
+    "b0da7": {
+      "importer": "gltf-mesh",
+      "uuid": "1943bfa3-b831-4c5f-b68e-22ac60ef8d1c@b0da7",
+      "displayName": "",
+      "id": "b0da7",
+      "name": "roadEnd.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 2093
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "b49bb": {
+      "importer": "gltf-scene",
+      "uuid": "1943bfa3-b831-4c5f-b68e-22ac60ef8d1c@b49bb",
+      "displayName": "",
+      "id": "b49bb",
+      "name": "roadEnd.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "dumpMaterials": true,
+    "disableMeshSplit": true,
+    "materialDumpDir": "db://assets/res/model/map/road",
+    "assetFinder": {
+      "meshes": [
+        "1943bfa3-b831-4c5f-b68e-22ac60ef8d1c@b0da7"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "5dad9321-7927-4fdb-acd4-1183ddd35857"
+      ],
+      "scenes": [
+        "1943bfa3-b831-4c5f-b68e-22ac60ef8d1c@b49bb"
+      ]
+    },
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

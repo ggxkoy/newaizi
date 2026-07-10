@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "925ec53d-1d87-4391-a9d2-efeb8a0d0237",
+  "files": [],
+  "subMetas": {
+    "31455": {
+      "importer": "gltf-mesh",
+      "uuid": "925ec53d-1d87-4391-a9d2-efeb8a0d0237@31455",
+      "displayName": "",
+      "id": "31455",
+      "name": "people.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 776
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "229a1": {
+      "importer": "gltf-scene",
+      "uuid": "925ec53d-1d87-4391-a9d2-efeb8a0d0237@229a1",
+      "displayName": "",
+      "id": "229a1",
+      "name": "people.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": false,
+    "assetFinder": {
+      "meshes": [
+        "925ec53d-1d87-4391-a9d2-efeb8a0d0237@31455"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "ac008a11-e45a-4fbf-9e0d-dc7570aa85af"
+      ],
+      "scenes": [
+        "925ec53d-1d87-4391-a9d2-efeb8a0d0237@229a1"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/man/Materials_people",
+    "fbx": {
+      "preferLocalTimeSpan": false,
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

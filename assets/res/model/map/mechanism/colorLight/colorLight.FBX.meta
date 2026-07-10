@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "cc4b4556-2456-49b0-9825-25e9e86ed3f3",
+  "files": [],
+  "subMetas": {
+    "d043b": {
+      "importer": "gltf-mesh",
+      "uuid": "cc4b4556-2456-49b0-9825-25e9e86ed3f3@d043b",
+      "displayName": "",
+      "id": "d043b",
+      "name": "colorLight.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 64
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "65c50": {
+      "importer": "gltf-scene",
+      "uuid": "cc4b4556-2456-49b0-9825-25e9e86ed3f3@65c50",
+      "displayName": "",
+      "id": "65c50",
+      "name": "colorLight.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "dumpMaterials": true,
+    "disableMeshSplit": true,
+    "materialDumpDir": "db://assets/res/model/map/mechanism/colorLight",
+    "assetFinder": {
+      "meshes": [
+        "cc4b4556-2456-49b0-9825-25e9e86ed3f3@d043b"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "ec28968f-d8c1-4608-a686-d1e0f5311e69"
+      ],
+      "scenes": [
+        "cc4b4556-2456-49b0-9825-25e9e86ed3f3@65c50"
+      ]
+    },
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

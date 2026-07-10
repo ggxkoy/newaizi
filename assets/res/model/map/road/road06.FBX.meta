@@ -1,0 +1,161 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec",
+  "files": [],
+  "subMetas": {
+    "56467": {
+      "importer": "gltf-mesh",
+      "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec@56467",
+      "displayName": "",
+      "id": "56467",
+      "name": "road06LC.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 795
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "817a9": {
+      "importer": "gltf-mesh",
+      "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec@817a9",
+      "displayName": "",
+      "id": "817a9",
+      "name": "road06RB.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 790
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "6474d": {
+      "importer": "gltf-mesh",
+      "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec@6474d",
+      "displayName": "",
+      "id": "6474d",
+      "name": "road06LA.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 90
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "1a29f": {
+      "importer": "gltf-mesh",
+      "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec@1a29f",
+      "displayName": "",
+      "id": "1a29f",
+      "name": "road06RA.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 90
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "53e16": {
+      "importer": "gltf-mesh",
+      "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec@53e16",
+      "displayName": "",
+      "id": "53e16",
+      "name": "road06LB.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 790
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "09beb": {
+      "importer": "gltf-scene",
+      "uuid": "589797d7-a5b1-43e8-9036-692d2a1e4dec@09beb",
+      "displayName": "",
+      "id": "09beb",
+      "name": "road06.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "589797d7-a5b1-43e8-9036-692d2a1e4dec@817a9",
+        "589797d7-a5b1-43e8-9036-692d2a1e4dec@6474d",
+        "589797d7-a5b1-43e8-9036-692d2a1e4dec@1a29f",
+        "589797d7-a5b1-43e8-9036-692d2a1e4dec@53e16",
+        "589797d7-a5b1-43e8-9036-692d2a1e4dec@56467"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "47baa7c0-a2a4-43e6-88e9-6e52b6c3dbee"
+      ],
+      "scenes": [
+        "589797d7-a5b1-43e8-9036-692d2a1e4dec@09beb"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/map/road",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

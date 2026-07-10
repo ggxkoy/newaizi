@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "1c3665c0-d654-4345-b755-3a7413542a3e",
+  "files": [],
+  "subMetas": {
+    "a2ae3": {
+      "importer": "gltf-mesh",
+      "uuid": "1c3665c0-d654-4345-b755-3a7413542a3e@a2ae3",
+      "displayName": "",
+      "id": "a2ae3",
+      "name": "rotatingBlade.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 600
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "3c3ee": {
+      "importer": "gltf-scene",
+      "uuid": "1c3665c0-d654-4345-b755-3a7413542a3e@3c3ee",
+      "displayName": "",
+      "id": "3c3ee",
+      "name": "rotatingBlade.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "1c3665c0-d654-4345-b755-3a7413542a3e@a2ae3"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "65b752ff-2ae3-46c9-91c7-6b96998d040e"
+      ],
+      "scenes": [
+        "1c3665c0-d654-4345-b755-3a7413542a3e@3c3ee"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/map/mechanism/rotatingBlade",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

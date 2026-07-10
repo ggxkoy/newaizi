@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "46baaba5-cb56-49af-a0b1-11422feb62c2",
+  "files": [],
+  "subMetas": {
+    "c1df8": {
+      "importer": "gltf-mesh",
+      "uuid": "46baaba5-cb56-49af-a0b1-11422feb62c2@c1df8",
+      "displayName": "",
+      "id": "c1df8",
+      "name": "spikePlate.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 274
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "ed19a": {
+      "importer": "gltf-scene",
+      "uuid": "46baaba5-cb56-49af-a0b1-11422feb62c2@ed19a",
+      "displayName": "",
+      "id": "ed19a",
+      "name": "maceSector.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "46baaba5-cb56-49af-a0b1-11422feb62c2@c1df8"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "667bc687-93e7-49b9-beb4-85fd7d582c48"
+      ],
+      "scenes": [
+        "46baaba5-cb56-49af-a0b1-11422feb62c2@ed19a"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/map/mechanism/maceSector",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

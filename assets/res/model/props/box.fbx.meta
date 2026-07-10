@@ -1,0 +1,104 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "9daaf9c2-fa25-41da-9cab-0da1111e3a85",
+  "files": [],
+  "subMetas": {
+    "6b764": {
+      "importer": "gltf-mesh",
+      "uuid": "9daaf9c2-fa25-41da-9cab-0da1111e3a85@6b764",
+      "displayName": "",
+      "id": "6b764",
+      "name": "treasureChestNew01.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 848
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "3face": {
+      "importer": "gltf-mesh",
+      "uuid": "9daaf9c2-fa25-41da-9cab-0da1111e3a85@3face",
+      "displayName": "",
+      "id": "3face",
+      "name": "treasureChestNew02.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 380
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "bd3ce": {
+      "importer": "gltf-scene",
+      "uuid": "9daaf9c2-fa25-41da-9cab-0da1111e3a85@bd3ce",
+      "displayName": "",
+      "id": "bd3ce",
+      "name": "box.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "9daaf9c2-fa25-41da-9cab-0da1111e3a85@6b764",
+        "9daaf9c2-fa25-41da-9cab-0da1111e3a85@3face"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "be22f166-1ce9-4d04-a928-adc8bf3144a0"
+      ],
+      "scenes": [
+        "9daaf9c2-fa25-41da-9cab-0da1111e3a85@bd3ce"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/props",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

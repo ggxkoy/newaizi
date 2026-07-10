@@ -1,0 +1,89 @@
+{
+  "__type__": "cc.Material",
+  "_name": "",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "ef5123e5-c846-4da0-ab53-4d325147ffa7"
+  },
+  "_techIdx": 0,
+  "_defines": [
+    {
+      "USE_WATER_COLOR": true,
+      "USE_WATER_TEXTURE": true
+    }
+  ],
+  "_states": [
+    {
+      "rasterizerState": {},
+      "depthStencilState": {},
+      "blendState": {
+        "targets": [
+          {}
+        ]
+      }
+    }
+  ],
+  "_props": [
+    {
+      "depthGradientShallow": {
+        "__type__": "cc.Color",
+        "r": 0,
+        "g": 190,
+        "b": 250,
+        "a": 255
+      },
+      "depthGradientDeep": {
+        "__type__": "cc.Color",
+        "r": 96,
+        "g": 252,
+        "b": 252,
+        "a": 255
+      },
+      "surfaceWaterTexture": {
+        "__uuid__": "d701ccc9-6000-4122-845c-ba0e67b919b4@6c48a"
+      },
+      "surfaceWaterDepth": {
+        "__uuid__": "e1f37532-a708-400c-8046-7dc340e28721@6c48a"
+      },
+      "surfaceNoise": {
+        "__uuid__": "9ebc7769-f9d4-4819-aa24-83a59b0d3dbe@6c48a"
+      },
+      "noiseTiling_Offset": {
+        "__type__": "cc.Vec4",
+        "x": 5,
+        "y": 5,
+        "z": 0,
+        "w": 0
+      },
+      "surfaceNoiseCutoff": 0.62,
+      "surfaceNoiseScroll": {
+        "__type__": "cc.Vec4",
+        "x": -0.02,
+        "y": -0.02,
+        "z": 0,
+        "w": 0
+      },
+      "surfaceDistortion": {
+        "__uuid__": "9968bc93-a2cc-43c1-b60d-9fb1abfb88f0@6c48a"
+      },
+      "distortionTiling_Offset": {
+        "__type__": "cc.Vec4",
+        "x": 8,
+        "y": 8,
+        "z": 0,
+        "w": 0
+      },
+      "surfaceDistortionAmount": 0.6,
+      "foamColor": {
+        "__type__": "cc.Color",
+        "r": 25,
+        "g": 227,
+        "b": 255,
+        "a": 255
+      },
+      "foamMaxDistance": 1,
+      "foamMinDistance": 50
+    }
+  ]
+}

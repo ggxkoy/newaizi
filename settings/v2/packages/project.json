@@ -1,0 +1,93 @@
+{
+  "__version__": "1.0.6",
+  "general": {
+    "designResolution": {
+      "width": 720,
+      "height": 1280
+    }
+  },
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "player"
+      },
+      {
+        "index": 2,
+        "name": "colliderItem"
+      },
+      {
+        "index": 3,
+        "name": "brick"
+      },
+      {
+        "index": 4,
+        "name": "raycastMesh"
+      }
+    ],
+    "collisionMatrix": {
+      "0": 15,
+      "1": 5,
+      "2": 15,
+      "3": 13,
+      "4": 0
+    },
+    "defaultMaterial": "3ae6bc3d-cd72-44cf-9f03-42430b7d383c"
+  },
+  "layer": [
+    {
+      "name": "UI_MODEL",
+      "value": 524288
+    }
+  ],
+  "custom_joint_texture_layouts": [
+    {
+      "textureLength": 12,
+      "contents": [
+        {
+          "skeleton": "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@438fe",
+          "clips": [
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@07a11",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@34918",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@b4251",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@74167",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@562d4",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@13c14",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@67bfe",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@34ab7",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@a2751",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@56689",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@89933",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@1f586",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@12496",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@a9e48",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@cf5ee",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@151e9",
+            "cac0c16b-7581-4e22-bfbf-f379b13e3f8a@ee525"
+          ]
+        },
+        {
+          "skeleton": "708135f5-4e3c-43bc-89c1-f4d793898f09@438fe",
+          "clips": [
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@e3f2f",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@78fa6",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@4249f",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@90b4f",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@d863a",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@fd7ed",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@2871d",
+            "708135f5-4e3c-43bc-89c1-f4d793898f09@3c60f"
+          ]
+        }
+      ]
+    }
+  ],
+  "fbx": {
+    "legacyFbxImporter": {
+      "visible": true
+    }
+  },
+  "script": {
+    "preserveSymlinks": true
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "50e5fc9b-ab82-4ea8-9393-a8c9125df04b",
+  "files": [],
+  "subMetas": {
+    "2efb1": {
+      "importer": "gltf-mesh",
+      "uuid": "50e5fc9b-ab82-4ea8-9393-a8c9125df04b@2efb1",
+      "displayName": "",
+      "id": "2efb1",
+      "name": "mace.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 750
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f5434": {
+      "importer": "gltf-scene",
+      "uuid": "50e5fc9b-ab82-4ea8-9393-a8c9125df04b@f5434",
+      "displayName": "",
+      "id": "f5434",
+      "name": "mace.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "50e5fc9b-ab82-4ea8-9393-a8c9125df04b@2efb1"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "0cccc690-8c1a-4fe7-abf5-be47f767ba82"
+      ],
+      "scenes": [
+        "50e5fc9b-ab82-4ea8-9393-a8c9125df04b@f5434"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/weapons",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,66 @@
+
+CCEffect %{
+  techniques:
+  - name: opaque
+    passes:
+    - vert: legacy/main-functions/general-vs:vert # builtin header
+      frag: unlit-fs:frag
+      properties: &props
+        mainTexture:    { value: white }
+        mainColor:      { value: [1, 1, 1, 1], editor: { type: color } }
+  - name: transparent
+    passes:
+    - vert: legacy/main-functions/general-vs:vert # builtin header
+      frag: unlit-fs:frag
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      properties: *props
+}%
+
+CCProgram unlit-fs %{
+  precision highp float;
+  #include <legacy/output>
+  #include <legacy/fog-fs>
+
+  in vec2 v_uv;
+  in vec3 v_normal; // 法线;
+  in vec3 v_position; 
+
+
+  uniform sampler2D mainTexture;
+  // in float factor_fog;
+
+  uniform Constant {
+    vec4 mainColor;
+  };
+
+  vec4 frag () {
+    vec3 N = v_normal;
+    vec3 V = normalize(cc_cameraPos.xyz - v_position);
+    vec3 L = normalize(-cc_mainLitDir.xyz);
+    vec3 H = normalize(L + V);
+
+    // blinPhong
+    float _Gloss = 1.0;
+    float blinPhong = pow(max(0.0, dot(H, N)), _Gloss);
+    vec3 blinPhongLight = blinPhong * cc_mainLitColor.rgb;
+    // end
+
+    // lambert
+    float halfLam = dot(L, N) * 0.5 + 0.5;
+    vec3 halfLamLight = halfLam * cc_mainLitColor.rgb;
+    // end
+    vec4 allLight = vec4(blinPhongLight.rgb, 1) + vec4(halfLamLight.rgb, 1); 
+
+    vec4 col = mainColor * texture(mainTexture, v_uv);
+    col = col * allLight;
+
+    CC_APPLY_FOG(col);
+    return CCFragOutput(col);
+  }
+}%

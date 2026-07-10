@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "31be5267-abce-4fe0-9a69-8652c13f74b9",
+  "files": [],
+  "subMetas": {
+    "744f1": {
+      "importer": "gltf-mesh",
+      "uuid": "31be5267-abce-4fe0-9a69-8652c13f74b9@744f1",
+      "displayName": "",
+      "id": "744f1",
+      "name": "hornHat.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 672
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "397f6": {
+      "importer": "gltf-scene",
+      "uuid": "31be5267-abce-4fe0-9a69-8652c13f74b9@397f6",
+      "displayName": "",
+      "id": "397f6",
+      "name": "hornHat.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "31be5267-abce-4fe0-9a69-8652c13f74b9@744f1"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "b43075fc-c8e9-4b23-9b1e-fd1395b45f6d"
+      ],
+      "scenes": [
+        "31be5267-abce-4fe0-9a69-8652c13f74b9@397f6"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/adornment",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

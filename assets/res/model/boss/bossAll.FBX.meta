@@ -1,0 +1,370 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "0eb9c": {
+      "importer": "gltf-mesh",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@0eb9c",
+      "displayName": "",
+      "id": "0eb9c",
+      "name": "boss.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 1656
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "90b4f": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@90b4f",
+      "displayName": "",
+      "id": "90b4f",
+      "name": "bossFightIdle.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 2
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "e3f2f": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@e3f2f",
+      "displayName": "",
+      "id": "e3f2f",
+      "name": "bossAngry.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 2.033333333333333,
+          "to": 4.033333333333333
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "78fa6": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@78fa6",
+      "displayName": "",
+      "id": "78fa6",
+      "name": "bossAttack.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 4.1,
+          "to": 6.033333333333333
+        },
+        "events": [
+          {
+            "frame": 0.9666666666666667,
+            "func": "onFrameEnableCollider",
+            "params": []
+          },
+          {
+            "frame": 1.0666666666666667,
+            "func": "onFrameDisableCollider",
+            "params": []
+          }
+        ],
+        "speed": 1
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "2871d": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@2871d",
+      "displayName": "",
+      "id": "2871d",
+      "name": "bossSwoon.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 6.133333333333334,
+          "to": 7.1
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "fd7ed": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@fd7ed",
+      "displayName": "",
+      "id": "fd7ed",
+      "name": "bossLose.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 7.133333333333334,
+          "to": 7.933333333333334
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "4249f": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@4249f",
+      "displayName": "",
+      "id": "4249f",
+      "name": "bossDie.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 8,
+          "to": 8.666666666666666
+        },
+        "events": [],
+        "speed": 1
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "3c60f": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@3c60f",
+      "displayName": "",
+      "id": "3c60f",
+      "name": "bossWin.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 8.733333333333333,
+          "to": 12.033333333333333
+        },
+        "events": [],
+        "speed": 1
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "d863a": {
+      "importer": "gltf-animation",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@d863a",
+      "displayName": "",
+      "id": "d863a",
+      "name": "bossHit.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 12.066666666666666,
+          "to": 12.533333333333333
+        },
+        "events": [],
+        "speed": 1
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "438fe": {
+      "importer": "gltf-skeleton",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@438fe",
+      "displayName": "",
+      "id": "438fe",
+      "name": "UnnamedSkeleton.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 23
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "22ad0": {
+      "importer": "gltf-scene",
+      "uuid": "708135f5-4e3c-43bc-89c1-f4d793898f09@22ad0",
+      "displayName": "",
+      "id": "22ad0",
+      "name": "bossAll.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "dumpMaterials": true,
+    "disableMeshSplit": true,
+    "materialDumpDir": "db://assets/res/model/boss",
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 13.166666984558105,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "bossFightIdle",
+            "from": 0,
+            "to": 2,
+            "wrapMode": 2,
+            "previousId": "90b4f"
+          },
+          {
+            "name": "bossAngry",
+            "from": 2.033333333333333,
+            "to": 4.033333333333333,
+            "wrapMode": 2,
+            "previousId": "e3f2f"
+          },
+          {
+            "name": "bossAttack",
+            "from": 4.1,
+            "to": 6.033333333333333,
+            "wrapMode": 2,
+            "previousId": "78fa6"
+          },
+          {
+            "name": "bossSwoon",
+            "from": 6.133333333333334,
+            "to": 7.1,
+            "wrapMode": 2,
+            "previousId": "2871d"
+          },
+          {
+            "name": "bossLose",
+            "from": 7.133333333333334,
+            "to": 7.933333333333334,
+            "wrapMode": 2,
+            "previousId": "fd7ed"
+          },
+          {
+            "name": "bossDie",
+            "from": 8,
+            "to": 8.666666666666666,
+            "wrapMode": 2,
+            "previousId": "4249f"
+          },
+          {
+            "name": "bossWin",
+            "from": 8.733333333333333,
+            "to": 12.033333333333333,
+            "wrapMode": 2,
+            "previousId": "3c60f"
+          },
+          {
+            "name": "bossHit",
+            "from": 12.066666666666666,
+            "to": 12.533333333333333,
+            "wrapMode": 2,
+            "previousId": "d863a"
+          }
+        ]
+      }
+    ],
+    "assetFinder": {
+      "meshes": [
+        "708135f5-4e3c-43bc-89c1-f4d793898f09@0eb9c"
+      ],
+      "skeletons": [
+        "708135f5-4e3c-43bc-89c1-f4d793898f09@438fe"
+      ],
+      "textures": [],
+      "materials": [
+        "ea5e6787-92f5-403d-879f-1ca1b0345df5"
+      ],
+      "scenes": [
+        "708135f5-4e3c-43bc-89c1-f4d793898f09@22ad0"
+      ]
+    },
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

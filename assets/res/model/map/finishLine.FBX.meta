@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "2d6b0028-7b68-484c-bc77-b6530b551cd3",
+  "files": [],
+  "subMetas": {
+    "4485d": {
+      "importer": "gltf-mesh",
+      "uuid": "2d6b0028-7b68-484c-bc77-b6530b551cd3@4485d",
+      "displayName": "",
+      "id": "4485d",
+      "name": "finishLine.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 2
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5670f": {
+      "importer": "gltf-scene",
+      "uuid": "2d6b0028-7b68-484c-bc77-b6530b551cd3@5670f",
+      "displayName": "",
+      "id": "5670f",
+      "name": "finishLine.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "dumpMaterials": true,
+    "disableMeshSplit": true,
+    "materialDumpDir": "db://assets/res/model/map",
+    "assetFinder": {
+      "meshes": [
+        "2d6b0028-7b68-484c-bc77-b6530b551cd3@4485d"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "0b2313d9-d87e-464a-8ddb-b612cc93c982"
+      ],
+      "scenes": [
+        "2d6b0028-7b68-484c-bc77-b6530b551cd3@5670f"
+      ]
+    },
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

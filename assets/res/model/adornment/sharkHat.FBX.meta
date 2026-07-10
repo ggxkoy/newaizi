@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "f64406f9-9b1a-47fd-b065-2fb8ef418715",
+  "files": [],
+  "subMetas": {
+    "c5295": {
+      "importer": "gltf-mesh",
+      "uuid": "f64406f9-9b1a-47fd-b065-2fb8ef418715@c5295",
+      "displayName": "",
+      "id": "c5295",
+      "name": "sharkHat.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 976
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "39dbf": {
+      "importer": "gltf-scene",
+      "uuid": "f64406f9-9b1a-47fd-b065-2fb8ef418715@39dbf",
+      "displayName": "",
+      "id": "39dbf",
+      "name": "sharkHat.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "f64406f9-9b1a-47fd-b065-2fb8ef418715@c5295"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "72e0edf6-487f-4ab2-bb2c-60d4fb47a476"
+      ],
+      "scenes": [
+        "f64406f9-9b1a-47fd-b065-2fb8ef418715@39dbf"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/adornment",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

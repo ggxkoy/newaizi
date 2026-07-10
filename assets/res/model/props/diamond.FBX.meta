@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "73305f97-20b7-4774-abb3-a930342bb513",
+  "files": [],
+  "subMetas": {
+    "27868": {
+      "importer": "gltf-mesh",
+      "uuid": "73305f97-20b7-4774-abb3-a930342bb513@27868",
+      "displayName": "",
+      "id": "27868",
+      "name": "diamond.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 48
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "42102": {
+      "importer": "gltf-scene",
+      "uuid": "73305f97-20b7-4774-abb3-a930342bb513@42102",
+      "displayName": "",
+      "id": "42102",
+      "name": "diamond.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "73305f97-20b7-4774-abb3-a930342bb513@27868"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "cffaa8ae-9476-4f1a-9e01-81732b5c4847"
+      ],
+      "scenes": [
+        "73305f97-20b7-4774-abb3-a930342bb513@42102"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/props",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

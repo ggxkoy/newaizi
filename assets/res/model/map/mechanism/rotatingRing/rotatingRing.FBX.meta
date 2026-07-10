@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "0c1e5fba-7b96-4b67-9388-2628aa4f9c21",
+  "files": [],
+  "subMetas": {
+    "46032": {
+      "importer": "gltf-scene",
+      "uuid": "0c1e5fba-7b96-4b67-9388-2628aa4f9c21@46032",
+      "displayName": "",
+      "id": "46032",
+      "name": "rotatingRing.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "39ce5": {
+      "importer": "gltf-mesh",
+      "uuid": "0c1e5fba-7b96-4b67-9388-2628aa4f9c21@39ce5",
+      "displayName": "",
+      "id": "39ce5",
+      "name": "rotatingRing.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 164
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "0c1e5fba-7b96-4b67-9388-2628aa4f9c21@39ce5"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "606bf301-cf35-4862-942a-ec1a61deb389"
+      ],
+      "scenes": [
+        "0c1e5fba-7b96-4b67-9388-2628aa4f9c21@46032"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/map/mechanism/rotatingRing",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}

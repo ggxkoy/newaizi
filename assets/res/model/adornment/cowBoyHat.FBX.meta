@@ -1,0 +1,85 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "b3420f47-0e4a-4cb6-ba90-0f6357b55950",
+  "files": [],
+  "subMetas": {
+    "2112a": {
+      "importer": "gltf-mesh",
+      "uuid": "b3420f47-0e4a-4cb6-ba90-0f6357b55950@2112a",
+      "displayName": "",
+      "id": "2112a",
+      "name": "cowBoyHat.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 320
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "abf8d": {
+      "importer": "gltf-scene",
+      "uuid": "b3420f47-0e4a-4cb6-ba90-0f6357b55950@abf8d",
+      "displayName": "",
+      "id": "abf8d",
+      "name": "cowBoyHat.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "legacyFbxImporter": true,
+    "assetFinder": {
+      "meshes": [
+        "b3420f47-0e4a-4cb6-ba90-0f6357b55950@2112a"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "afa6a8c0-7fe4-45aa-9bae-f212eb9b8da3"
+      ],
+      "scenes": [
+        "b3420f47-0e4a-4cb6-ba90-0f6357b55950@abf8d"
+      ]
+    },
+    "dumpMaterials": true,
+    "materialDumpDir": "db://assets/res/model/adornment",
+    "disableMeshSplit": true,
+    "fbx": {
+      "smartMaterialEnabled": false,
+      "matchMeshNames": false
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    }
+  }
+}
