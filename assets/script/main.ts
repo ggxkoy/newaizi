@@ -1,4 +1,5 @@
 import { _decorator, Component, game, PhysicsSystem, profiler } from 'cc';
+import { AudioManager } from './framework/audioManager';
 import { constant } from './framework/constant';
 import { DefenseBridgePrototype } from './defense/DefenseBridgePrototype';
 
@@ -10,6 +11,7 @@ export class Main extends Component {
         game.frameRate = constant.GAME_FRAME;
         PhysicsSystem.instance.fixedTimeStep = 1 / constant.GAME_FRAME;
         profiler.hideStats();
+        AudioManager.instance.init();
         this.node.addComponent(DefenseBridgePrototype);
     }
 }

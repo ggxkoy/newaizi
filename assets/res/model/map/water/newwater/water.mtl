@@ -49,11 +49,10 @@
       "causticSpeed": 0.03,
       "causticRGBSplit": 0.6,
       "causticColor": {
-        "__type__": "cc.Color",
-        "r": 3,
-        "g": 102,
-        "b": 121,
-        "a": 255
+        "__type__": "cc.Vec3",
+        "x": 0.011764705882352941,
+        "y": 0.4,
+        "z": 0.4745098039215686
       },
       "causticTexture": {
         "__uuid__": "04f9f064-9886-42a8-b856-4af0f3e3422a@6c48a"
