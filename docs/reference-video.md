@@ -10,4 +10,4 @@
 | Duration | 47.083 seconds |
 | SHA-256 | `9A3DA7A7E4927D4EF8EC21C855BDA81A2B12670844C4A33A9FA358D9D74DEC25` |
 
-This file is the visual and pacing reference for the vertical bridge-defense gameplay described in `docs/gameplay-requirements.md`.
+This file is the visual and pacing reference for the current gameplay defined in `docs/current-video-defense-requirements.md`.
