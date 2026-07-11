@@ -31,33 +31,55 @@ interface MovingTarget {
     boss: boolean;
 }
 
-// 相机从桥尾朝 +z 方向看，所以世界 +x 在画面左侧：
-// 画面左路（升级道具）用 +x，画面右路（敌人/boss）用 -x
-const LEFT_LANE_X = 1.65;
-const RIGHT_LANE_X = -1.65;
-const PLAYER_Z = -4.2;
-const PLAYER_X_LIMIT = 2.55;
-const BULLET_RANGE = 14;
-const BULLET_SPEED = 10;
-const ENEMIES_BEFORE_BOSS = 30;
+// —— 场景比例（单位：米）——
+// road01 网格实测 1(宽)x1(长)x1(高)，是一个墩子：底部在 y=0（水面），可行走的顶面在 y≈1。
+// 之前所有角色都放在 y=0，等于站在水里而不是桥面上。
+const SURFACE_Y = 1.0;
 
-// road01（"低直路"）模块沿 z 长度为 1 个单位，按缩放后的步长首尾相接铺成连续桥面
-const ROAD_Z_SCALE = 1.2;
+// 双路合并成一整块桥面：2 列 tile 各拉宽 2.5 倍拼成总宽 5m，
+// 中缝的包边正好形成参考视频里左右分幅的分道线。
+const ROAD_X_SCALE = 2.5;
+const ROAD_Z_SCALE = 2;
 const BRIDGE_START_Z = -8;
-const BRIDGE_END_Z = 22;
+const BRIDGE_END_Z = 18;
 
-// 小兵按 3 列纵队持续行进铺满右路：每 ENEMY_ROW_INTERVAL 秒刷一行，
-// 行距 = 移速 * 间隔 ≈ 1.2，加随机抖动避免呆板的方阵感
-const ENEMY_COLUMN_OFFSETS = [-0.55, 0, 0.55];
-const ENEMY_ROW_INTERVAL = 0.9;
-const ENEMY_ROW_SPACING = 1.215;
-const ENEMY_PREFILL_ROWS = 10;
+// 相机从桥尾朝 +z 方向看，世界 +x 在画面左侧：
+// 画面左半幅（升级道具）用 +x，画面右半幅（敌人/boss）用 -x
+const LEFT_LANE_X = 1.25;
+const RIGHT_LANE_X = -1.25;
+const PLAYER_Z = -4.2;
+const PLAYER_X_LIMIT = 2.2;
+
+// 角色相对 5m 桥宽的比例（小人模型净高 1.74m）
+const PLAYER_SCALE = 0.55;
+const MINION_SCALE = 0.5;
+const BOSS_SCALE = 1;
+
+const BULLET_RANGE = 16;
+const BULLET_SPEED = 10;
+const BULLET_HEIGHT = 0.5; // 子弹相对桥面的飞行高度（小兵胸口）
+const ENEMIES_BEFORE_BOSS = 30;
+const MINION_SPAWN_Z = 14;
+const BOSS_SPAWN_Z = 16;
+
+// 命中判定半径（只比较水平面 XZ 距离——之前用 3D 距离，
+// 子弹与小兵 0.9m 的高度差直接超过判定半径，导致子弹永远打不中小兵、看起来像穿过去了）
+const MINION_HIT_RADIUS = 0.45;
+const BOSS_HIT_RADIUS = 0.9;
+const PROP_HIT_RADIUS = 0.7;
+
+// 小兵按 4 列纵队持续行进铺满右半幅：每 ENEMY_ROW_INTERVAL 秒刷一行，
+// 行距 = 移速 * 间隔，加随机抖动避免呆板的方阵感
+const ENEMY_COLUMN_OFFSETS = [-0.9, -0.3, 0.3, 0.9];
+const ENEMY_ROW_INTERVAL = 0.85;
+const ENEMY_ROW_SPACING = 1.15;
+const ENEMY_PREFILL_ROWS = 15;
 // 同屏骨骼动画角色的性能上限，达到后暂停刷怪
-const MAX_ALIVE_MINIONS = 45;
+const MAX_ALIVE_MINIONS = 60;
 
 // 头顶血量数字相对角色/道具原点的高度
 const PROP_LABEL_HEIGHT = 1.6;
-const BOSS_LABEL_HEIGHT = 2.8;
+const BOSS_LABEL_HEIGHT = 2.2;
 
 // 小人（manAll.FBX）与 boss（bossAll.FBX）自带的骨骼动画 clip 名
 const PLAYER_IDLE_CLIP = 'fightIdle';
@@ -80,6 +102,7 @@ export class DefenseBridgePrototype extends Component {
     private upgradeProp: Node | null = null;
     private bulletPrefab: Prefab | null = null;
     private tracerPrefab: Prefab | null = null;
+    private hitEffectPrefab: Prefab | null = null;
     private statusLabel: Label | null = null;
     private propHpLabel: Label | null = null;
     private bossHpLabel: Label | null = null;
@@ -134,12 +157,13 @@ export class DefenseBridgePrototype extends Component {
         if (!scene) {
             throw new Error('DefenseBridgePrototype: active scene is required.');
         }
-        const [playerPrefab, roadPrefab, propPrefab, bulletPrefab, tracerPrefab] = await Promise.all([
+        const [playerPrefab, roadPrefab, propPrefab, bulletPrefab, tracerPrefab, hitEffectPrefab] = await Promise.all([
             this.loadPrefab('prefab/model/man/player'),
             this.loadPrefab('map/road/road01'),
             this.loadPrefab('map/box/box'),
             this.loadPrefab('map/diamond/diamond'),
             this.loadPrefab('prefab/effect/flyLight/flyLight'),
+            this.loadPrefab('prefab/effect/hit/hit'),
         ]);
         const root = new Node('DefenseBridge');
         scene.addChild(root);
@@ -150,6 +174,7 @@ export class DefenseBridgePrototype extends Component {
         this.createUpgradeProp(root, propPrefab);
         this.bulletPrefab = bulletPrefab;
         this.tracerPrefab = tracerPrefab;
+        this.hitEffectPrefab = hitEffectPrefab;
         input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
         this.initialized = true;
         // 开局预填充：让右路一开始就被行进中的小兵铺满，而不是等纵队慢慢走下来
@@ -190,9 +215,9 @@ export class DefenseBridgePrototype extends Component {
         }
         const cameraNode = new Node('DefenseCamera');
         root.addChild(cameraNode);
-        // 拉近、抬高并压低看向点，让双桥充满竖屏（参考视频的近俯视构图）
-        cameraNode.setPosition(0, 8.2, -10.8);
-        cameraNode.lookAt(new Vec3(0, 0, 2.5));
+        // 拉近、抬高并压低看向点，让桥面充满竖屏（参考视频的近俯视构图）
+        cameraNode.setPosition(0, SURFACE_Y + 8.2, -10.8);
+        cameraNode.lookAt(new Vec3(0, SURFACE_Y, 2.5));
         const camera = cameraNode.addComponent(Camera);
         camera.priority = 1;
         camera.visibility = 0xffffffff;
@@ -201,13 +226,14 @@ export class DefenseBridgePrototype extends Component {
     }
 
     private createBridge(root: Node, roadPrefab: Prefab): void {
-        for (const laneX of [LEFT_LANE_X, RIGHT_LANE_X]) {
+        // 两列拉宽的 tile 无缝拼成一整块桥面，墩子底部落在水面（y=0）
+        for (const laneX of [-ROAD_X_SCALE / 2, ROAD_X_SCALE / 2]) {
             for (let z = BRIDGE_START_Z; z <= BRIDGE_END_Z; z += ROAD_Z_SCALE) {
                 const road = instantiate(roadPrefab);
                 this.stripNonVisualComponents(road);
                 root.addChild(road);
                 road.setPosition(laneX, 0, z);
-                road.setScale(0.88, 1, ROAD_Z_SCALE);
+                road.setScale(ROAD_X_SCALE, 1, ROAD_Z_SCALE);
             }
         }
     }
@@ -216,8 +242,8 @@ export class DefenseBridgePrototype extends Component {
         const player = instantiate(playerPrefab);
         this.stripNonVisualComponents(player);
         root.addChild(player);
-        player.setPosition(0, 0, PLAYER_Z);
-        player.setScale(0.9, 0.9, 0.9);
+        player.setPosition(0, SURFACE_Y, PLAYER_Z);
+        player.setScale(PLAYER_SCALE, PLAYER_SCALE, PLAYER_SCALE);
         // 小人模型默认朝 -z（面向镜头），转身面向 +z 的来敌方向
         player.setRotationFromEuler(0, 180, 0);
         this.player = player;
@@ -228,7 +254,7 @@ export class DefenseBridgePrototype extends Component {
         const prop = instantiate(propPrefab);
         this.stripNonVisualComponents(prop);
         root.addChild(prop);
-        prop.setPosition(LEFT_LANE_X, 0.1, 5.2);
+        prop.setPosition(LEFT_LANE_X, SURFACE_Y + 0.1, 5.2);
         prop.setScale(0.9, 0.9, 0.9);
         this.upgradeProp = prop;
     }
@@ -309,7 +335,7 @@ export class DefenseBridgePrototype extends Component {
             bullet.addChild(instantiate(this.tracerPrefab));
         }
         this.player.parent?.addChild(bullet);
-        bullet.setPosition(this.player.position.x, 0.9, this.player.position.z + 0.65);
+        bullet.setPosition(this.player.position.x, SURFACE_Y + BULLET_HEIGHT, this.player.position.z + 0.65);
         this.bullets.push(bullet);
         this.playShootAnimation();
     }
@@ -336,9 +362,8 @@ export class DefenseBridgePrototype extends Component {
         const node = instantiate(prefab);
         this.stripNonVisualComponents(node);
         this.player.parent.addChild(node);
-        node.setPosition(RIGHT_LANE_X + offsetX, 0, (boss ? 20 : 17) + offsetZ);
-        // boss 预制体（bossAll.FBX）本身就比小人大，不再额外放大
-        const scale = boss ? 1 : 0.82;
+        node.setPosition(RIGHT_LANE_X + offsetX, SURFACE_Y, (boss ? BOSS_SPAWN_Z : MINION_SPAWN_Z) + offsetZ);
+        const scale = boss ? BOSS_SCALE : MINION_SCALE;
         node.setScale(scale, scale, scale);
         // 模型默认朝 -z，正好面向桥尾的主角，无需转身
         if (!boss) {
@@ -380,11 +405,34 @@ export class DefenseBridgePrototype extends Component {
         }
     }
 
+    private horizontalDistanceSq(a: Vec3, b: Vec3): number {
+        const dx = a.x - b.x;
+        const dz = a.z - b.z;
+        return dx * dx + dz * dz;
+    }
+
+    private spawnHitEffect(position: Vec3): void {
+        if (!this.hitEffectPrefab || !this.player?.parent) {
+            return;
+        }
+        // hit.prefab 是一次性粒子（playOnAwake、不循环），放完销毁
+        const effect = instantiate(this.hitEffectPrefab);
+        this.player.parent.addChild(effect);
+        effect.setPosition(position);
+        this.scheduleOnce(() => {
+            if (effect.isValid) {
+                effect.destroy();
+            }
+        }, 1);
+    }
+
     private resolveHits(): void {
         for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex -= 1) {
             const bullet = this.bullets[bulletIndex];
-            if (this.upgradeProp && this.upgradeHp > 0 && Vec3.distance(bullet.position, this.upgradeProp.position) <= 0.8) {
+            if (this.upgradeProp && this.upgradeHp > 0
+                && this.horizontalDistanceSq(bullet.position, this.upgradeProp.position) <= PROP_HIT_RADIUS * PROP_HIT_RADIUS) {
                 this.upgradeHp = Math.max(0, this.upgradeHp - this.damage);
+                this.spawnHitEffect(bullet.position);
                 bullet.destroy();
                 this.bullets.splice(bulletIndex, 1);
                 if (this.upgradeHp === 0) {
@@ -397,10 +445,12 @@ export class DefenseBridgePrototype extends Component {
             }
             for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex -= 1) {
                 const enemy = this.enemies[enemyIndex];
-                if (Vec3.distance(bullet.position, enemy.node.position) > (enemy.boss ? 1.05 : 0.65)) {
+                const radius = enemy.boss ? BOSS_HIT_RADIUS : MINION_HIT_RADIUS;
+                if (this.horizontalDistanceSq(bullet.position, enemy.node.position) > radius * radius) {
                     continue;
                 }
                 enemy.hp -= this.damage;
+                this.spawnHitEffect(bullet.position);
                 bullet.destroy();
                 this.bullets.splice(bulletIndex, 1);
                 if (enemy.hp <= 0) {
