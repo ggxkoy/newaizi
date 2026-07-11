@@ -11,6 +11,7 @@ import {
     Input,
     instantiate,
     Label,
+    Material,
     MeshRenderer,
     Node,
     ParticleSystem,
@@ -18,6 +19,7 @@ import {
     resources,
     SkeletalAnimation,
     SkinnedMeshRenderer,
+    tween,
     UITransform,
     Vec3,
 } from 'cc';
@@ -26,6 +28,7 @@ const { ccclass } = _decorator;
 
 interface MovingTarget {
     readonly node: Node;
+    readonly material: Material | null;
     hp: number;
     speed: number;
     boss: boolean;
@@ -85,13 +88,24 @@ const BOSS_LABEL_HEIGHT = 2.2;
 const PLAYER_IDLE_CLIP = 'fightIdle';
 const PLAYER_ATTACK_CLIPS = ['attackLeft', 'attackRight'];
 const ENEMY_RUN_CLIP = 'run';
-const ENEMY_DIE_CLIP = 'die';
 const BOSS_IDLE_CLIP = 'bossFightIdle';
 const BOSS_DIE_CLIP = 'bossDie';
 const CORPSE_FALLBACK_SECONDS = 5;
 
 // 与 manRed01.mtl 相同的敌人红色
 const ENEMY_COLOR = new Color(253, 69, 69, 255);
+
+// —— 受击/死亡反馈 ——
+// 受击闪白：短暂拉高自发光再恢复（标准材质 emissive 默认为黑）
+const HIT_FLASH_COLOR = new Color(255, 255, 255, 255);
+const HIT_FLASH_SECONDS = 0.08;
+// 死亡后尸体变灰（对带贴图的 boss 则表现为整体压暗）
+const DEATH_GRAY = new Color(110, 110, 110, 255);
+// 小兵死亡击飞：先向后上方抛起，再坠落，最后缩没消失
+const KNOCKBACK_RISE = new Vec3(0, 1.6, 2.8);
+const KNOCKBACK_FALL = new Vec3(0, -3.0, 1.6);
+const ENEMY_FLY_START_CLIP = 'hitFly01';
+const ENEMY_FLY_LOOP_CLIP = 'hitFly02';
 
 @ccclass('DefenseBridgePrototype')
 export class DefenseBridgePrototype extends Component {
@@ -366,17 +380,30 @@ export class DefenseBridgePrototype extends Component {
         const scale = boss ? BOSS_SCALE : MINION_SCALE;
         node.setScale(scale, scale, scale);
         // 模型默认朝 -z，正好面向桥尾的主角，无需转身
+        const material = this.getBodyMaterial(node);
         if (!boss) {
-            this.tintCharacter(node, ENEMY_COLOR);
+            // peopleEnemy 的材质（manEnemy.mtl）无贴图、由 mainColor 决定颜色，改实例属性即可
+            material?.setProperty('mainColor', ENEMY_COLOR);
         }
         this.playClip(node, boss ? BOSS_IDLE_CLIP : ENEMY_RUN_CLIP, true);
-        this.enemies.push({ node, hp: boss ? 20 : 1, speed: boss ? 0.8 : 1.35, boss });
+        this.enemies.push({ node, material, hp: boss ? 20 : 1, speed: boss ? 0.8 : 1.35, boss });
     }
 
-    private tintCharacter(characterRoot: Node, color: Color): void {
+    private getBodyMaterial(characterRoot: Node): Material | null {
         const renderer = characterRoot.getComponentInChildren(SkinnedMeshRenderer);
-        // peopleEnemy 的材质（manEnemy.mtl）无贴图、由 mainColor 决定颜色，改实例属性即可
-        renderer?.getMaterialInstance(0)?.setProperty('mainColor', color);
+        return renderer?.getMaterialInstance(0) ?? null;
+    }
+
+    private flashTarget(target: MovingTarget): void {
+        if (!target.material) {
+            return;
+        }
+        target.material.setProperty('emissive', HIT_FLASH_COLOR);
+        this.scheduleOnce(() => {
+            if (target.node.isValid) {
+                target.material?.setProperty('emissive', Color.BLACK);
+            }
+        }, HIT_FLASH_SECONDS);
     }
 
     private moveBullets(deltaTime: number): void {
@@ -451,6 +478,7 @@ export class DefenseBridgePrototype extends Component {
                 }
                 enemy.hp -= this.damage;
                 this.spawnHitEffect(bullet.position);
+                this.flashTarget(enemy);
                 bullet.destroy();
                 this.bullets.splice(bulletIndex, 1);
                 if (enemy.hp <= 0) {
@@ -469,16 +497,40 @@ export class DefenseBridgePrototype extends Component {
 
     private playDeath(target: MovingTarget): void {
         const node = target.node;
-        const played = this.playClip(node, target.boss ? BOSS_DIE_CLIP : ENEMY_DIE_CLIP, false, () => {
-            if (node.isValid) {
-                node.destroy();
-            }
-        });
-        if (!played) {
-            node.destroy();
-            return;
+        // 死亡变灰（boss 材质带贴图，mainColor 变灰表现为整体压暗）
+        if (target.material) {
+            target.material.setProperty('mainColor', DEATH_GRAY);
+            target.material.setProperty('emissive', Color.BLACK);
         }
-        // FINISHED 事件在极端情况下可能收不到（如动画被打断），兜底清理尸体
+        if (target.boss) {
+            const played = this.playClip(node, BOSS_DIE_CLIP, false, () => {
+                if (node.isValid) {
+                    node.destroy();
+                }
+            });
+            if (!played) {
+                node.destroy();
+                return;
+            }
+        } else {
+            // 小兵被击飞：向后上方抛起、坠落，最后缩没消失
+            this.playClip(node, ENEMY_FLY_START_CLIP, false, () => {
+                if (node.isValid) {
+                    this.playClip(node, ENEMY_FLY_LOOP_CLIP, true);
+                }
+            });
+            tween(node)
+                .by(0.4, { position: KNOCKBACK_RISE.clone() }, { easing: 'sineOut' })
+                .by(0.4, { position: KNOCKBACK_FALL.clone() }, { easing: 'sineIn' })
+                .to(0.15, { scale: new Vec3(0, 0, 0) })
+                .call(() => {
+                    if (node.isValid) {
+                        node.destroy();
+                    }
+                })
+                .start();
+        }
+        // FINISHED/tween 在极端情况下可能收不到（如节点被打断），兜底清理尸体
         this.scheduleOnce(() => {
             if (node.isValid) {
                 node.destroy();
