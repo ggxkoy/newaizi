@@ -39,20 +39,21 @@ const PLAYER_Z = -4.2;
 const PLAYER_X_LIMIT = 2.55;
 const BULLET_RANGE = 14;
 const BULLET_SPEED = 10;
-const ENEMIES_BEFORE_BOSS = 12;
+const ENEMIES_BEFORE_BOSS = 30;
 
 // road01（"低直路"）模块沿 z 长度为 1 个单位，按缩放后的步长首尾相接铺成连续桥面
 const ROAD_Z_SCALE = 1.2;
 const BRIDGE_START_Z = -8;
 const BRIDGE_END_Z = 22;
 
-// 每波小兵在右路车道内的散布（车道中心为原点）
-const WAVE_OFFSETS = [
-    { x: 0, z: 0 },
-    { x: -0.45, z: 0.8 },
-    { x: 0.45, z: 1.5 },
-];
-const WAVE_INTERVAL = 1.8;
+// 小兵按 3 列纵队持续行进铺满右路：每 ENEMY_ROW_INTERVAL 秒刷一行，
+// 行距 = 移速 * 间隔 ≈ 1.2，加随机抖动避免呆板的方阵感
+const ENEMY_COLUMN_OFFSETS = [-0.55, 0, 0.55];
+const ENEMY_ROW_INTERVAL = 0.9;
+const ENEMY_ROW_SPACING = 1.215;
+const ENEMY_PREFILL_ROWS = 10;
+// 同屏骨骼动画角色的性能上限，达到后暂停刷怪
+const MAX_ALIVE_MINIONS = 45;
 
 // 头顶血量数字相对角色/道具原点的高度
 const PROP_LABEL_HEIGHT = 1.6;
@@ -110,11 +111,9 @@ export class DefenseBridgePrototype extends Component {
             this.fireTimer = 0;
             this.fireBullet();
         }
-        if (!this.bossSpawned && this.spawnTimer >= WAVE_INTERVAL) {
+        if (!this.bossSpawned && this.spawnTimer >= ENEMY_ROW_INTERVAL) {
             this.spawnTimer = 0;
-            for (const offset of WAVE_OFFSETS) {
-                void this.spawnEnemy(false, offset.x, offset.z);
-            }
+            this.spawnEnemyRow();
         }
         this.moveBullets(deltaTime);
         this.moveEnemies(deltaTime);
@@ -153,7 +152,22 @@ export class DefenseBridgePrototype extends Component {
         this.tracerPrefab = tracerPrefab;
         input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
         this.initialized = true;
+        // 开局预填充：让右路一开始就被行进中的小兵铺满，而不是等纵队慢慢走下来
+        for (let row = 1; row <= ENEMY_PREFILL_ROWS; row += 1) {
+            this.spawnEnemyRow(-row * ENEMY_ROW_SPACING);
+        }
         this.refreshHud();
+    }
+
+    private spawnEnemyRow(zOffset = 0): void {
+        if (this.enemies.length >= MAX_ALIVE_MINIONS) {
+            return;
+        }
+        for (const columnX of ENEMY_COLUMN_OFFSETS) {
+            const jitterX = (Math.random() - 0.5) * 0.24;
+            const jitterZ = (Math.random() - 0.5) * 0.5;
+            void this.spawnEnemy(false, columnX + jitterX, zOffset + jitterZ);
+        }
     }
 
     private loadPrefab(path: string): Promise<Prefab> {
