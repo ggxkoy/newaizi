@@ -34,9 +34,16 @@ interface MovingTarget {
     boss: boolean;
 }
 
+// 左路目标物：火力道具（power）与 +N 数字门（squad）轮流出现
+interface LaneObjective {
+    readonly node: Node;
+    readonly kind: 'power' | 'squad';
+    readonly bonus: number;
+    hp: number;
+}
+
 // —— 场景比例（单位：米）——
 // road01 网格实测 1(宽)x1(长)x1(高)，是一个墩子：底部在 y=0（水面），可行走的顶面在 y≈1。
-// 之前所有角色都放在 y=0，等于站在水里而不是桥面上。
 const SURFACE_Y = 1.0;
 
 // 双路合并成一整块桥面：2 列 tile 各拉宽 2.5 倍拼成总宽 5m，
@@ -47,33 +54,59 @@ const BRIDGE_START_Z = -8;
 const BRIDGE_END_Z = 18;
 
 // 相机从桥尾朝 +z 方向看，世界 +x 在画面左侧：
-// 画面左半幅（升级道具）用 +x，画面右半幅（敌人/boss）用 -x
+// 画面左半幅（道具/数字门）用 +x，画面右半幅（敌人/boss）用 -x
 const LEFT_LANE_X = 1.25;
 const RIGHT_LANE_X = -1.25;
 const PLAYER_Z = -4.2;
-const PLAYER_X_LIMIT = 2.2;
+// 锚点活动范围要给编队宽度（±0.85）留出余量，避免队员走出桥沿
+const PLAYER_X_LIMIT = 1.65;
 
 // 角色相对 5m 桥宽的比例（小人模型净高 1.74m）
 const PLAYER_SCALE = 0.55;
 const MINION_SCALE = 0.5;
 const BOSS_SCALE = 1;
 
+// 小队编队：锚点在队首，后续队员向后按行排开
+const FORMATION_OFFSETS = [
+    new Vec3(0, 0, 0),
+    new Vec3(-0.5, 0, -0.45), new Vec3(0.5, 0, -0.45),
+    new Vec3(-0.85, 0, -0.95), new Vec3(0, 0, -0.95), new Vec3(0.85, 0, -0.95),
+    new Vec3(-0.5, 0, -1.45), new Vec3(0.5, 0, -1.45),
+    new Vec3(-0.85, 0, -1.95), new Vec3(0, 0, -1.95), new Vec3(0.85, 0, -1.95),
+    new Vec3(0, 0, -2.45),
+];
+
 const BULLET_RANGE = 16;
 const BULLET_SPEED = 10;
 const BULLET_HEIGHT = 0.5; // 子弹相对桥面的飞行高度（小兵胸口）
 const BULLET_CORE_SCALE = 0.3;
-// 吃到升级道具后子弹变大变金色，给出明显的强化反馈
+// 吃到火力道具后子弹变大变金色，给出明显的强化反馈
 const UPGRADED_BULLET_CORE_SCALE = 0.42;
 const UPGRADED_TRACER_COLOR = new Color(255, 190, 40, 255);
 const ENEMIES_BEFORE_BOSS = 30;
 const MINION_SPAWN_Z = 14;
 const BOSS_SPAWN_Z = 16;
 
-// 命中判定半径（只比较水平面 XZ 距离——之前用 3D 距离，
-// 子弹与小兵 0.9m 的高度差直接超过判定半径，导致子弹永远打不中小兵、看起来像穿过去了）
+// 命中判定半径（只比较水平面 XZ 距离）
 const MINION_HIT_RADIUS = 0.45;
 const BOSS_HIT_RADIUS = 0.9;
-const PROP_HIT_RADIUS = 0.7;
+const POWER_HIT_RADIUS = 0.7;
+const GATE_HIT_RADIUS = 1.0;
+
+// 接触判定：小兵碰到队员一换一（即死一名队员），boss 碾过范围内的所有队员
+const MINION_CONTACT_RADIUS = 0.45;
+const BOSS_CONTACT_RADIUS = 1.1;
+// 敌人越过整个编队纵深后从桥尾消失
+const ENEMY_PASS_Z = PLAYER_Z - 3;
+
+// 左路目标物轮换：火力道具与 +5 数字门交替，血量逐轮增长
+const OBJECTIVE_Z = 5.2;
+const SQUAD_GATE_BONUS = 5;
+const POWER_BASE_HP = 8;
+const POWER_HP_PER_CYCLE = 6;
+const GATE_BASE_HP = 20;
+const GATE_HP_PER_CYCLE = 8;
+const OBJECTIVE_RESPAWN_DELAY = 2;
 
 // 小兵纵队从远端走过来，节奏随时间加压，开局给主角留出去左路吃道具的时间：
 // 刷新间隔从 1.6s 线性压缩到 0.85s，纵队宽度从 2 列逐步加宽到 4 列
@@ -87,8 +120,9 @@ const COLUMNS_4_AT_SECONDS = 30;
 // 同屏骨骼动画角色的性能上限，达到后暂停刷怪
 const MAX_ALIVE_MINIONS = 60;
 
-// 头顶血量数字相对角色/道具原点的高度
-const PROP_LABEL_HEIGHT = 1.6;
+// 头顶血量数字相对目标原点的高度
+const POWER_LABEL_HEIGHT = 1.6;
+const GATE_LABEL_HEIGHT = 2.4;
 const BOSS_LABEL_HEIGHT = 2.2;
 
 // 小人（manAll.FBX）与 boss（bossAll.FBX）自带的骨骼动画 clip 名
@@ -118,14 +152,19 @@ const ENEMY_FLY_LOOP_CLIP = 'hitFly02';
 export class DefenseBridgePrototype extends Component {
     private readonly bullets: Node[] = [];
     private readonly enemies: MovingTarget[] = [];
+    private readonly squadMembers: Node[] = [];
     private readonly tempPosition = new Vec3();
-    private player: Node | null = null;
-    private upgradeProp: Node | null = null;
+    private root: Node | null = null;
+    private squadAnchor: Node | null = null;
+    private objective: LaneObjective | null = null;
+    private playerPrefab: Prefab | null = null;
+    private propPrefab: Prefab | null = null;
+    private gatePrefab: Prefab | null = null;
     private bulletPrefab: Prefab | null = null;
     private tracerPrefab: Prefab | null = null;
     private hitEffectPrefab: Prefab | null = null;
     private statusLabel: Label | null = null;
-    private propHpLabel: Label | null = null;
+    private objectiveHpLabel: Label | null = null;
     private bossHpLabel: Label | null = null;
     private camera: Camera | null = null;
     private canvas: Node | null = null;
@@ -134,13 +173,14 @@ export class DefenseBridgePrototype extends Component {
     private spawnTimer = 0;
     private elapsed = 0;
     private attackClipIndex = 0;
+    private objectiveIndex = 0;
     private upgradeLevel = 0;
-    private upgradeHp = 8;
     private damage = 1;
     private fireInterval = 0.42;
     private kills = 0;
     private bossSpawned = false;
     private bossDefeated = false;
+    private gameOver = false;
     private initialized = false;
 
     protected start(): void {
@@ -148,7 +188,11 @@ export class DefenseBridgePrototype extends Component {
     }
 
     protected update(deltaTime: number): void {
-        if (!this.initialized || !this.player) {
+        if (!this.initialized || !this.squadAnchor) {
+            return;
+        }
+        if (this.gameOver) {
+            this.refreshHud();
             return;
         }
         this.elapsed += deltaTime;
@@ -156,7 +200,7 @@ export class DefenseBridgePrototype extends Component {
         this.spawnTimer += deltaTime;
         if (this.fireTimer >= this.fireInterval) {
             this.fireTimer = 0;
-            this.fireBullet();
+            this.fireVolley();
         }
         if (!this.bossSpawned && this.spawnTimer >= this.currentSpawnInterval()) {
             this.spawnTimer = 0;
@@ -165,6 +209,7 @@ export class DefenseBridgePrototype extends Component {
         this.moveBullets(deltaTime);
         this.moveEnemies(deltaTime);
         this.resolveHits();
+        this.resolveContacts();
         if (!this.bossSpawned && this.kills >= ENEMIES_BEFORE_BOSS) {
             this.bossSpawned = true;
             void this.spawnEnemy(true);
@@ -181,24 +226,29 @@ export class DefenseBridgePrototype extends Component {
         if (!scene) {
             throw new Error('DefenseBridgePrototype: active scene is required.');
         }
-        const [playerPrefab, roadPrefab, propPrefab, bulletPrefab, tracerPrefab, hitEffectPrefab] = await Promise.all([
+        const [playerPrefab, roadPrefab, propPrefab, gatePrefab, bulletPrefab, tracerPrefab, hitEffectPrefab] = await Promise.all([
             this.loadPrefab('prefab/model/man/player'),
             this.loadPrefab('map/road/road01'),
             this.loadPrefab('map/box/box'),
+            this.loadPrefab('map/organ/organDoor'),
             this.loadPrefab('map/diamond/diamond'),
             this.loadPrefab('prefab/effect/flyLight/flyLight'),
             this.loadPrefab('prefab/effect/hit/hit'),
         ]);
         const root = new Node('DefenseBridge');
         scene.addChild(root);
-        this.setupCamera(scene, root);
-        this.createHud();
-        this.createBridge(root, roadPrefab);
-        this.createPlayer(root, playerPrefab);
-        this.createUpgradeProp(root, propPrefab);
+        this.root = root;
+        this.playerPrefab = playerPrefab;
+        this.propPrefab = propPrefab;
+        this.gatePrefab = gatePrefab;
         this.bulletPrefab = bulletPrefab;
         this.tracerPrefab = tracerPrefab;
         this.hitEffectPrefab = hitEffectPrefab;
+        this.setupCamera(scene, root);
+        this.createHud();
+        this.createBridge(root, roadPrefab);
+        this.createSquad(root);
+        this.spawnNextObjective();
         input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
         this.initialized = true;
         this.refreshHud();
@@ -273,25 +323,78 @@ export class DefenseBridgePrototype extends Component {
         }
     }
 
-    private createPlayer(root: Node, playerPrefab: Prefab): void {
-        const player = instantiate(playerPrefab);
-        this.stripNonVisualComponents(player);
-        root.addChild(player);
-        player.setPosition(0, SURFACE_Y, PLAYER_Z);
-        player.setScale(PLAYER_SCALE, PLAYER_SCALE, PLAYER_SCALE);
-        // 小人模型默认朝 -z（面向镜头），转身面向 +z 的来敌方向
-        player.setRotationFromEuler(0, 180, 0);
-        this.player = player;
-        this.playClip(player, PLAYER_IDLE_CLIP, true);
+    private createSquad(root: Node): void {
+        // 锚点是不可见的队首参照物：触摸移动、射击原点、接触判定都围绕它
+        const anchor = new Node('SquadAnchor');
+        root.addChild(anchor);
+        anchor.setPosition(0, SURFACE_Y, PLAYER_Z);
+        this.squadAnchor = anchor;
+        this.addSquadMembers(1);
     }
 
-    private createUpgradeProp(root: Node, propPrefab: Prefab): void {
-        const prop = instantiate(propPrefab);
-        this.stripNonVisualComponents(prop);
-        root.addChild(prop);
-        prop.setPosition(LEFT_LANE_X, SURFACE_Y + 0.1, 5.2);
-        prop.setScale(0.9, 0.9, 0.9);
-        this.upgradeProp = prop;
+    private addSquadMembers(count: number): void {
+        if (!this.squadAnchor || !this.playerPrefab) {
+            return;
+        }
+        for (let i = 0; i < count; i += 1) {
+            const slot = this.squadMembers.length;
+            if (slot >= FORMATION_OFFSETS.length) {
+                return;
+            }
+            const member = instantiate(this.playerPrefab);
+            this.stripNonVisualComponents(member);
+            this.squadAnchor.addChild(member);
+            member.setPosition(FORMATION_OFFSETS[slot]);
+            member.setScale(PLAYER_SCALE, PLAYER_SCALE, PLAYER_SCALE);
+            // player.prefab 的 body 子节点预转了 180°，根节点再转 180° 面向 +z 来敌方向
+            member.setRotationFromEuler(0, 180, 0);
+            this.squadMembers.push(member);
+            this.playClip(member, PLAYER_IDLE_CLIP, true);
+        }
+    }
+
+    private killSquadMember(index: number): void {
+        const member = this.squadMembers[index];
+        this.squadMembers.splice(index, 1);
+        this.spawnHitEffect(member.worldPosition);
+        member.destroy();
+        if (this.squadMembers.length === 0) {
+            this.gameOver = true;
+        }
+    }
+
+    private spawnNextObjective(): void {
+        if (!this.root || this.gameOver) {
+            return;
+        }
+        const isPower = this.objectiveIndex % 2 === 0;
+        const cycle = Math.floor(this.objectiveIndex / 2);
+        const prefab = isPower ? this.propPrefab : this.gatePrefab;
+        if (!prefab) {
+            return;
+        }
+        const node = instantiate(prefab);
+        this.stripNonVisualComponents(node);
+        this.root.addChild(node);
+        node.setPosition(LEFT_LANE_X, SURFACE_Y + (isPower ? 0.1 : 0), OBJECTIVE_Z);
+        node.setScale(0.9, 0.9, 0.9);
+        this.objective = {
+            node,
+            kind: isPower ? 'power' : 'squad',
+            bonus: isPower ? 1 : SQUAD_GATE_BONUS,
+            hp: isPower ? POWER_BASE_HP + cycle * POWER_HP_PER_CYCLE : GATE_BASE_HP + cycle * GATE_HP_PER_CYCLE,
+        };
+        this.objectiveIndex += 1;
+    }
+
+    private applyObjectiveReward(objective: LaneObjective): void {
+        if (objective.kind === 'power') {
+            this.upgradeLevel += 1;
+            this.damage += 1;
+            this.fireInterval = Math.max(0.12, this.fireInterval - 0.1);
+        } else {
+            this.addSquadMembers(objective.bonus);
+        }
     }
 
     private stripNonVisualComponents(node: Node): void {
@@ -327,16 +430,16 @@ export class DefenseBridgePrototype extends Component {
         }
         this.canvas = canvas;
         this.statusLabel = this.createLabel(canvas, 0, 480, 30, Color.WHITE);
-        // 道具/boss 的血量数字跟随各自头顶（世界坐标每帧转换到 UI 坐标）
-        this.propHpLabel = this.createLabel(canvas, 0, 0, 40, Color.WHITE);
+        // 目标物/boss 的血量数字跟随各自头顶（世界坐标每帧转换到 UI 坐标）
+        this.objectiveHpLabel = this.createLabel(canvas, 0, 0, 40, Color.WHITE);
         this.bossHpLabel = this.createLabel(canvas, 0, 0, 46, new Color(255, 229, 100, 255));
-        this.propHpLabel.node.active = false;
+        this.objectiveHpLabel.node.active = false;
         this.bossHpLabel.node.active = false;
     }
 
     private createLabel(parent: Node, x: number, y: number, fontSize: number, color: Color): Label {
         const node = new Node('DefenseHudLabel');
-        node.addComponent(UITransform).setContentSize(720, 54);
+        node.addComponent(UITransform).setContentSize(720, 108);
         node.setPosition(x, y, 0);
         parent.addChild(node);
         const label = node.addComponent(Label);
@@ -348,16 +451,27 @@ export class DefenseBridgePrototype extends Component {
     }
 
     private onTouchMove(event: EventTouch): void {
-        if (!this.player) {
+        if (!this.squadAnchor || this.gameOver) {
             return;
         }
         // 世界 +x 在画面左侧，手指右滑（UI delta 为正）应向世界 -x 移动
-        const nextX = Math.max(-PLAYER_X_LIMIT, Math.min(PLAYER_X_LIMIT, this.player.position.x - event.getUIDelta().x * 0.012));
-        this.player.setPosition(nextX, this.player.position.y, PLAYER_Z);
+        const nextX = Math.max(-PLAYER_X_LIMIT, Math.min(PLAYER_X_LIMIT, this.squadAnchor.position.x - event.getUIDelta().x * 0.012));
+        this.squadAnchor.setPosition(nextX, SURFACE_Y, PLAYER_Z);
     }
 
-    private fireBullet(): void {
-        if (!this.player || !this.bulletPrefab) {
+    private fireVolley(): void {
+        if (!this.bulletPrefab || this.squadMembers.length === 0) {
+            return;
+        }
+        // 每名队员从自己的位置发射一颗子弹：人越多火力越密
+        for (const member of this.squadMembers) {
+            this.spawnBullet(member.worldPosition);
+        }
+        this.playShootAnimation();
+    }
+
+    private spawnBullet(origin: Vec3): void {
+        if (!this.root || !this.bulletPrefab) {
             return;
         }
         // 外层节点保持 scale 1，让拖尾粒子不被子弹本体的缩放压小
@@ -379,34 +493,31 @@ export class DefenseBridgePrototype extends Component {
             }
             bullet.addChild(tracer);
         }
-        this.player.parent?.addChild(bullet);
-        bullet.setPosition(this.player.position.x, SURFACE_Y + BULLET_HEIGHT, this.player.position.z + 0.65);
+        this.root.addChild(bullet);
+        bullet.setPosition(origin.x, SURFACE_Y + BULLET_HEIGHT, origin.z + 0.65);
         this.bullets.push(bullet);
-        this.playShootAnimation();
     }
 
     private playShootAnimation(): void {
-        const player = this.player;
-        if (!player) {
-            return;
-        }
         const clip = PLAYER_ATTACK_CLIPS[this.attackClipIndex];
         this.attackClipIndex = (this.attackClipIndex + 1) % PLAYER_ATTACK_CLIPS.length;
-        this.playClip(player, clip, false, () => {
-            if (player.isValid && this.player === player) {
-                this.playClip(player, PLAYER_IDLE_CLIP, true);
-            }
-        });
+        for (const member of this.squadMembers) {
+            this.playClip(member, clip, false, () => {
+                if (member.isValid && this.squadMembers.includes(member)) {
+                    this.playClip(member, PLAYER_IDLE_CLIP, true);
+                }
+            });
+        }
     }
 
     private async spawnEnemy(boss: boolean, offsetX = 0, offsetZ = 0): Promise<void> {
         const prefab = await this.loadPrefab(boss ? 'map/people/peopleBoss' : 'map/people/peopleEnemy');
-        if (!this.initialized || !this.player?.parent) {
+        if (!this.initialized || !this.root || this.gameOver) {
             return;
         }
         const node = instantiate(prefab);
         this.stripNonVisualComponents(node);
-        this.player.parent.addChild(node);
+        this.root.addChild(node);
         node.setPosition(RIGHT_LANE_X + offsetX, SURFACE_Y, (boss ? BOSS_SPAWN_Z : MINION_SPAWN_Z) + offsetZ);
         const scale = boss ? BOSS_SCALE : MINION_SCALE;
         node.setScale(scale, scale, scale);
@@ -458,9 +569,41 @@ export class DefenseBridgePrototype extends Component {
             enemy.node.getPosition(this.tempPosition);
             this.tempPosition.z -= enemy.speed * deltaTime;
             enemy.node.setPosition(this.tempPosition);
-            if (this.tempPosition.z <= PLAYER_Z + 0.8) {
+            // 越过整个编队纵深仍未接触到任何队员，从桥尾走掉
+            if (this.tempPosition.z <= ENEMY_PASS_Z) {
                 enemy.node.destroy();
                 this.enemies.splice(index, 1);
+            }
+        }
+    }
+
+    /**
+     * 接触判定：小兵碰到队员时一换一（队员即死、小兵击飞死亡）；
+     * boss 不会死于接触，而是一路碾过碰到的每一名队员。
+     */
+    private resolveContacts(): void {
+        for (let index = this.enemies.length - 1; index >= 0; index -= 1) {
+            const enemy = this.enemies[index];
+            // 敌人还没走到编队纵深范围，跳过
+            if (enemy.node.position.z > PLAYER_Z + 1) {
+                continue;
+            }
+            const radius = enemy.boss ? BOSS_CONTACT_RADIUS : MINION_CONTACT_RADIUS;
+            let traded = false;
+            for (let m = this.squadMembers.length - 1; m >= 0; m -= 1) {
+                const member = this.squadMembers[m];
+                if (this.horizontalDistanceSq(enemy.node.worldPosition, member.worldPosition) > radius * radius) {
+                    continue;
+                }
+                this.killSquadMember(m);
+                traded = true;
+                if (!enemy.boss) {
+                    break;
+                }
+            }
+            if (traded && !enemy.boss) {
+                this.enemies.splice(index, 1);
+                this.playDeath(enemy);
             }
         }
     }
@@ -472,12 +615,12 @@ export class DefenseBridgePrototype extends Component {
     }
 
     private spawnHitEffect(position: Vec3): void {
-        if (!this.hitEffectPrefab || !this.player?.parent) {
+        if (!this.hitEffectPrefab || !this.root) {
             return;
         }
         // hit.prefab 是一次性粒子（playOnAwake、不循环），放完销毁
         const effect = instantiate(this.hitEffectPrefab);
-        this.player.parent.addChild(effect);
+        this.root.addChild(effect);
         effect.setPosition(position);
         this.scheduleOnce(() => {
             if (effect.isValid) {
@@ -489,20 +632,22 @@ export class DefenseBridgePrototype extends Component {
     private resolveHits(): void {
         for (let bulletIndex = this.bullets.length - 1; bulletIndex >= 0; bulletIndex -= 1) {
             const bullet = this.bullets[bulletIndex];
-            if (this.upgradeProp && this.upgradeHp > 0
-                && this.horizontalDistanceSq(bullet.position, this.upgradeProp.position) <= PROP_HIT_RADIUS * PROP_HIT_RADIUS) {
-                this.upgradeHp = Math.max(0, this.upgradeHp - this.damage);
-                this.spawnHitEffect(bullet.position);
-                bullet.destroy();
-                this.bullets.splice(bulletIndex, 1);
-                if (this.upgradeHp === 0) {
-                    this.upgradeLevel += 1;
-                    this.damage += 1;
-                    this.fireInterval = Math.max(0.12, this.fireInterval - 0.1);
-                    this.upgradeProp.destroy();
-                    this.upgradeProp = null;
+            const objective = this.objective;
+            if (objective) {
+                const radius = objective.kind === 'power' ? POWER_HIT_RADIUS : GATE_HIT_RADIUS;
+                if (this.horizontalDistanceSq(bullet.position, objective.node.position) <= radius * radius) {
+                    objective.hp = Math.max(0, objective.hp - this.damage);
+                    this.spawnHitEffect(bullet.position);
+                    bullet.destroy();
+                    this.bullets.splice(bulletIndex, 1);
+                    if (objective.hp === 0) {
+                        this.applyObjectiveReward(objective);
+                        objective.node.destroy();
+                        this.objective = null;
+                        this.scheduleOnce(() => this.spawnNextObjective(), OBJECTIVE_RESPAWN_DELAY);
+                    }
+                    continue;
                 }
-                continue;
             }
             for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex -= 1) {
                 const enemy = this.enemies[enemyIndex];
@@ -575,17 +720,23 @@ export class DefenseBridgePrototype extends Component {
     private refreshHud(): void {
         if (this.statusLabel) {
             let progress: string;
-            if (this.bossDefeated) {
+            if (this.gameOver) {
+                progress = '全员阵亡 · 游戏结束';
+            } else if (this.bossDefeated) {
                 progress = 'BOSS 已击败！';
             } else if (this.bossSpawned) {
                 progress = 'BOSS 来袭';
             } else {
                 progress = `击杀 ${this.kills}/${ENEMIES_BEFORE_BOSS}`;
             }
-            this.statusLabel.string = `伤害 ${this.damage} · 射速 ${(1 / this.fireInterval).toFixed(1)}/s · ${progress}`;
+            this.statusLabel.string = `人数 ${this.squadMembers.length} · 伤害 ${this.damage} · ${progress}`;
         }
-        const prop = this.upgradeProp && this.upgradeHp > 0 ? this.upgradeProp : null;
-        this.updateOverheadLabel(this.propHpLabel, prop, PROP_LABEL_HEIGHT, `${this.upgradeHp}`);
+        const objective = this.objective && this.objective.node.isValid ? this.objective : null;
+        const objectiveText = objective
+            ? (objective.kind === 'squad' ? `+${objective.bonus}\n${objective.hp}` : `${objective.hp}`)
+            : '';
+        const objectiveHeight = objective?.kind === 'squad' ? GATE_LABEL_HEIGHT : POWER_LABEL_HEIGHT;
+        this.updateOverheadLabel(this.objectiveHpLabel, objective?.node ?? null, objectiveHeight, objectiveText);
         const boss = this.enemies.find((enemy) => enemy.boss);
         this.updateOverheadLabel(this.bossHpLabel, boss?.node ?? null, BOSS_LABEL_HEIGHT, boss ? `${boss.hp}` : '');
     }
