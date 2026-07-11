@@ -61,6 +61,10 @@ const BOSS_SCALE = 1;
 const BULLET_RANGE = 16;
 const BULLET_SPEED = 10;
 const BULLET_HEIGHT = 0.5; // 子弹相对桥面的飞行高度（小兵胸口）
+const BULLET_CORE_SCALE = 0.3;
+// 吃到升级道具后子弹变大变金色，给出明显的强化反馈
+const UPGRADED_BULLET_CORE_SCALE = 0.42;
+const UPGRADED_TRACER_COLOR = new Color(255, 190, 40, 255);
 const ENEMIES_BEFORE_BOSS = 30;
 const MINION_SPAWN_Z = 14;
 const BOSS_SPAWN_Z = 16;
@@ -71,12 +75,15 @@ const MINION_HIT_RADIUS = 0.45;
 const BOSS_HIT_RADIUS = 0.9;
 const PROP_HIT_RADIUS = 0.7;
 
-// 小兵按 4 列纵队持续行进铺满右半幅：每 ENEMY_ROW_INTERVAL 秒刷一行，
-// 行距 = 移速 * 间隔，加随机抖动避免呆板的方阵感
+// 小兵纵队从远端走过来，节奏随时间加压，开局给主角留出去左路吃道具的时间：
+// 刷新间隔从 1.6s 线性压缩到 0.85s，纵队宽度从 2 列逐步加宽到 4 列
 const ENEMY_COLUMN_OFFSETS = [-0.9, -0.3, 0.3, 0.9];
-const ENEMY_ROW_INTERVAL = 0.85;
-const ENEMY_ROW_SPACING = 1.15;
-const ENEMY_PREFILL_ROWS = 15;
+const ENEMY_SPEED = 1.1;
+const SPAWN_INTERVAL_START = 1.6;
+const SPAWN_INTERVAL_END = 0.85;
+const SPAWN_RAMP_SECONDS = 45;
+const COLUMNS_3_AT_SECONDS = 15;
+const COLUMNS_4_AT_SECONDS = 30;
 // 同屏骨骼动画角色的性能上限，达到后暂停刷怪
 const MAX_ALIVE_MINIONS = 60;
 
@@ -125,7 +132,9 @@ export class DefenseBridgePrototype extends Component {
     private readonly uiPosition = new Vec3();
     private fireTimer = 0;
     private spawnTimer = 0;
+    private elapsed = 0;
     private attackClipIndex = 0;
+    private upgradeLevel = 0;
     private upgradeHp = 8;
     private damage = 1;
     private fireInterval = 0.42;
@@ -142,13 +151,14 @@ export class DefenseBridgePrototype extends Component {
         if (!this.initialized || !this.player) {
             return;
         }
+        this.elapsed += deltaTime;
         this.fireTimer += deltaTime;
         this.spawnTimer += deltaTime;
         if (this.fireTimer >= this.fireInterval) {
             this.fireTimer = 0;
             this.fireBullet();
         }
-        if (!this.bossSpawned && this.spawnTimer >= ENEMY_ROW_INTERVAL) {
+        if (!this.bossSpawned && this.spawnTimer >= this.currentSpawnInterval()) {
             this.spawnTimer = 0;
             this.spawnEnemyRow();
         }
@@ -191,21 +201,32 @@ export class DefenseBridgePrototype extends Component {
         this.hitEffectPrefab = hitEffectPrefab;
         input.on(Input.EventType.TOUCH_MOVE, this.onTouchMove, this);
         this.initialized = true;
-        // 开局预填充：让右路一开始就被行进中的小兵铺满，而不是等纵队慢慢走下来
-        for (let row = 1; row <= ENEMY_PREFILL_ROWS; row += 1) {
-            this.spawnEnemyRow(-row * ENEMY_ROW_SPACING);
-        }
         this.refreshHud();
     }
 
-    private spawnEnemyRow(zOffset = 0): void {
+    private currentSpawnInterval(): number {
+        const progress = Math.min(1, this.elapsed / SPAWN_RAMP_SECONDS);
+        return SPAWN_INTERVAL_START + (SPAWN_INTERVAL_END - SPAWN_INTERVAL_START) * progress;
+    }
+
+    private currentColumns(): number[] {
+        if (this.elapsed < COLUMNS_3_AT_SECONDS) {
+            return ENEMY_COLUMN_OFFSETS.slice(1, 3);
+        }
+        if (this.elapsed < COLUMNS_4_AT_SECONDS) {
+            return ENEMY_COLUMN_OFFSETS.slice(0, 3);
+        }
+        return ENEMY_COLUMN_OFFSETS;
+    }
+
+    private spawnEnemyRow(): void {
         if (this.enemies.length >= MAX_ALIVE_MINIONS) {
             return;
         }
-        for (const columnX of ENEMY_COLUMN_OFFSETS) {
+        for (const columnX of this.currentColumns()) {
             const jitterX = (Math.random() - 0.5) * 0.24;
             const jitterZ = (Math.random() - 0.5) * 0.5;
-            void this.spawnEnemy(false, columnX + jitterX, zOffset + jitterZ);
+            void this.spawnEnemy(false, columnX + jitterX, jitterZ);
         }
     }
 
@@ -343,10 +364,20 @@ export class DefenseBridgePrototype extends Component {
         const bullet = new Node('DefenseBullet');
         const core = instantiate(this.bulletPrefab);
         this.stripNonVisualComponents(core);
-        core.setScale(0.3, 0.3, 0.3);
+        const upgraded = this.upgradeLevel > 0;
+        const coreScale = upgraded ? UPGRADED_BULLET_CORE_SCALE : BULLET_CORE_SCALE;
+        core.setScale(coreScale, coreScale, coreScale);
         bullet.addChild(core);
         if (this.tracerPrefab) {
-            bullet.addChild(instantiate(this.tracerPrefab));
+            const tracer = instantiate(this.tracerPrefab);
+            if (upgraded) {
+                // 升级后拖尾变金色，强化"变强了"的视觉反馈
+                const particle = tracer.getComponent(ParticleSystem) ?? tracer.getComponentInChildren(ParticleSystem);
+                if (particle) {
+                    particle.startColor.color = UPGRADED_TRACER_COLOR;
+                }
+            }
+            bullet.addChild(tracer);
         }
         this.player.parent?.addChild(bullet);
         bullet.setPosition(this.player.position.x, SURFACE_Y + BULLET_HEIGHT, this.player.position.z + 0.65);
@@ -379,14 +410,16 @@ export class DefenseBridgePrototype extends Component {
         node.setPosition(RIGHT_LANE_X + offsetX, SURFACE_Y, (boss ? BOSS_SPAWN_Z : MINION_SPAWN_Z) + offsetZ);
         const scale = boss ? BOSS_SCALE : MINION_SCALE;
         node.setScale(scale, scale, scale);
-        // 模型默认朝 -z，正好面向桥尾的主角，无需转身
+        // peopleEnemy/peopleBoss 的 body 子节点没有像 player.prefab 那样预转 180°，
+        // 模型原生朝 +z，需要在根节点转身面向桥尾的主角（-z 行进方向）
+        node.setRotationFromEuler(0, 180, 0);
         const material = this.getBodyMaterial(node);
         if (!boss) {
             // peopleEnemy 的材质（manEnemy.mtl）无贴图、由 mainColor 决定颜色，改实例属性即可
             material?.setProperty('mainColor', ENEMY_COLOR);
         }
         this.playClip(node, boss ? BOSS_IDLE_CLIP : ENEMY_RUN_CLIP, true);
-        this.enemies.push({ node, material, hp: boss ? 20 : 1, speed: boss ? 0.8 : 1.35, boss });
+        this.enemies.push({ node, material, hp: boss ? 20 : 1, speed: boss ? 0.8 : ENEMY_SPEED, boss });
     }
 
     private getBodyMaterial(characterRoot: Node): Material | null {
@@ -463,6 +496,7 @@ export class DefenseBridgePrototype extends Component {
                 bullet.destroy();
                 this.bullets.splice(bulletIndex, 1);
                 if (this.upgradeHp === 0) {
+                    this.upgradeLevel += 1;
                     this.damage += 1;
                     this.fireInterval = Math.max(0.12, this.fireInterval - 0.1);
                     this.upgradeProp.destroy();
