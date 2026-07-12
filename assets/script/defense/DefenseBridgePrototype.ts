@@ -63,7 +63,8 @@ const PLAYER_X_LIMIT = 1.65;
 
 // 角色相对 5m 桥宽的比例（小人模型净高 1.74m）
 const PLAYER_SCALE = 0.55;
-const MINION_SCALE = 0.5;
+// 小兵比主角明显小一号，方便同屏堆出人海压力
+const MINION_SCALE = 0.4;
 const BOSS_SCALE = 1;
 
 // 小队编队：锚点在队首，后续队员向后按行排开
@@ -88,13 +89,13 @@ const MINION_SPAWN_Z = 14;
 const BOSS_SPAWN_Z = 16;
 
 // 命中判定半径（只比较水平面 XZ 距离）
-const MINION_HIT_RADIUS = 0.45;
+const MINION_HIT_RADIUS = 0.4;
 const BOSS_HIT_RADIUS = 0.9;
 const POWER_HIT_RADIUS = 0.7;
 const GATE_HIT_RADIUS = 1.0;
 
 // 接触判定：小兵碰到队员一换一（即死一名队员），boss 碾过范围内的所有队员
-const MINION_CONTACT_RADIUS = 0.45;
+const MINION_CONTACT_RADIUS = 0.4;
 const BOSS_CONTACT_RADIUS = 1.1;
 // 敌人越过整个编队纵深后从桥尾消失
 const ENEMY_PASS_Z = PLAYER_Z - 3;
@@ -108,21 +109,24 @@ const GATE_BASE_HP = 20;
 const GATE_HP_PER_CYCLE = 8;
 const OBJECTIVE_RESPAWN_DELAY = 2;
 
-// 小兵纵队从远端走过来，节奏随时间加压，开局给主角留出去左路吃道具的时间：
-// 刷新间隔从 1.6s 线性压缩到 0.85s，纵队宽度从 2 列逐步加宽到 4 列
-const ENEMY_COLUMN_OFFSETS = [-0.9, -0.3, 0.3, 0.9];
+// 小兵从远端以散兵形态涌来（随机散布，不排整齐队列），
+// 节奏随时间加压：刷新间隔压缩、每波数量增加，开局仍留出去左路吃道具的时间
 const ENEMY_SPEED = 1.1;
-const SPAWN_INTERVAL_START = 1.6;
-const SPAWN_INTERVAL_END = 0.85;
+const ENEMY_LANE_HALF_WIDTH = 0.95; // 右半幅内的横向散布半宽
+const ENEMY_SPAWN_Z_SCATTER = 1.5;  // 每波在纵深方向的散布
+const SPAWN_INTERVAL_START = 1.0;
+const SPAWN_INTERVAL_END = 0.45;
+const SPAWN_COUNT_START = 2;
+const SPAWN_COUNT_END = 4;
 const SPAWN_RAMP_SECONDS = 45;
-const COLUMNS_3_AT_SECONDS = 15;
-const COLUMNS_4_AT_SECONDS = 30;
 // 同屏骨骼动画角色的性能上限，达到后暂停刷怪
-const MAX_ALIVE_MINIONS = 60;
+const MAX_ALIVE_MINIONS = 80;
 
 // 头顶血量数字相对目标原点的高度
 const POWER_LABEL_HEIGHT = 1.6;
-const GATE_LABEL_HEIGHT = 2.4;
+const GATE_LABEL_HEIGHT = 2.2;
+// 数字门的 +N 奖励数字贴在门体正面中部，与血量分开显示
+const GATE_BONUS_LABEL_HEIGHT = 1.0;
 const BOSS_LABEL_HEIGHT = 2.2;
 
 // 小人（manAll.FBX）与 boss（bossAll.FBX）自带的骨骼动画 clip 名
@@ -165,6 +169,7 @@ export class DefenseBridgePrototype extends Component {
     private hitEffectPrefab: Prefab | null = null;
     private statusLabel: Label | null = null;
     private objectiveHpLabel: Label | null = null;
+    private gateBonusLabel: Label | null = null;
     private bossHpLabel: Label | null = null;
     private camera: Camera | null = null;
     private canvas: Node | null = null;
@@ -204,7 +209,7 @@ export class DefenseBridgePrototype extends Component {
         }
         if (!this.bossSpawned && this.spawnTimer >= this.currentSpawnInterval()) {
             this.spawnTimer = 0;
-            this.spawnEnemyRow();
+            this.spawnEnemyBurst();
         }
         this.moveBullets(deltaTime);
         this.moveEnemies(deltaTime);
@@ -259,24 +264,17 @@ export class DefenseBridgePrototype extends Component {
         return SPAWN_INTERVAL_START + (SPAWN_INTERVAL_END - SPAWN_INTERVAL_START) * progress;
     }
 
-    private currentColumns(): number[] {
-        if (this.elapsed < COLUMNS_3_AT_SECONDS) {
-            return ENEMY_COLUMN_OFFSETS.slice(1, 3);
-        }
-        if (this.elapsed < COLUMNS_4_AT_SECONDS) {
-            return ENEMY_COLUMN_OFFSETS.slice(0, 3);
-        }
-        return ENEMY_COLUMN_OFFSETS;
-    }
-
-    private spawnEnemyRow(): void {
+    private spawnEnemyBurst(): void {
         if (this.enemies.length >= MAX_ALIVE_MINIONS) {
             return;
         }
-        for (const columnX of this.currentColumns()) {
-            const jitterX = (Math.random() - 0.5) * 0.24;
-            const jitterZ = (Math.random() - 0.5) * 0.5;
-            void this.spawnEnemy(false, columnX + jitterX, jitterZ);
+        const progress = Math.min(1, this.elapsed / SPAWN_RAMP_SECONDS);
+        const count = Math.round(SPAWN_COUNT_START + (SPAWN_COUNT_END - SPAWN_COUNT_START) * progress);
+        // 散兵形态：在右半幅内完全随机落位，不排整齐队列
+        for (let i = 0; i < count; i += 1) {
+            const offsetX = (Math.random() * 2 - 1) * ENEMY_LANE_HALF_WIDTH;
+            const offsetZ = Math.random() * ENEMY_SPAWN_Z_SCATTER;
+            void this.spawnEnemy(false, offsetX, offsetZ);
         }
     }
 
@@ -432,8 +430,11 @@ export class DefenseBridgePrototype extends Component {
         this.statusLabel = this.createLabel(canvas, 0, 480, 30, Color.WHITE);
         // 目标物/boss 的血量数字跟随各自头顶（世界坐标每帧转换到 UI 坐标）
         this.objectiveHpLabel = this.createLabel(canvas, 0, 0, 40, Color.WHITE);
+        // 数字门的 +N 奖励数字单独贴在门体上，避免和血量混在一起引起误解
+        this.gateBonusLabel = this.createLabel(canvas, 0, 0, 56, new Color(140, 255, 120, 255));
         this.bossHpLabel = this.createLabel(canvas, 0, 0, 46, new Color(255, 229, 100, 255));
         this.objectiveHpLabel.node.active = false;
+        this.gateBonusLabel.node.active = false;
         this.bossHpLabel.node.active = false;
     }
 
@@ -732,11 +733,12 @@ export class DefenseBridgePrototype extends Component {
             this.statusLabel.string = `人数 ${this.squadMembers.length} · 伤害 ${this.damage} · ${progress}`;
         }
         const objective = this.objective && this.objective.node.isValid ? this.objective : null;
-        const objectiveText = objective
-            ? (objective.kind === 'squad' ? `+${objective.bonus}\n${objective.hp}` : `${objective.hp}`)
-            : '';
-        const objectiveHeight = objective?.kind === 'squad' ? GATE_LABEL_HEIGHT : POWER_LABEL_HEIGHT;
-        this.updateOverheadLabel(this.objectiveHpLabel, objective?.node ?? null, objectiveHeight, objectiveText);
+        const isGate = objective?.kind === 'squad';
+        // 血量数字在目标物上方，数字门的 +N 单独贴在门体正面
+        this.updateOverheadLabel(this.objectiveHpLabel, objective?.node ?? null,
+            isGate ? GATE_LABEL_HEIGHT : POWER_LABEL_HEIGHT, objective ? `${objective.hp}` : '');
+        this.updateOverheadLabel(this.gateBonusLabel, isGate ? objective!.node : null,
+            GATE_BONUS_LABEL_HEIGHT, isGate ? `+${objective!.bonus}` : '');
         const boss = this.enemies.find((enemy) => enemy.boss);
         this.updateOverheadLabel(this.bossHpLabel, boss?.node ?? null, BOSS_LABEL_HEIGHT, boss ? `${boss.hp}` : '');
     }
