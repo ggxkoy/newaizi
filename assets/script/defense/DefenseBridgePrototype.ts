@@ -117,6 +117,16 @@ const GATE_HEIGHT = 2.2;
 const GATE_THICKNESS = 0.12;
 const GATE_PANEL_COLOR = new Color(70, 140, 255, 150);
 
+// 右路追击数字门：从小兵身后出现、跟着小兵向前走。
+// 初始 -50 为红色，每被子弹命中一次数值 +1，变为正数后转蓝色；
+// 门走到主角处发生结算：当前人数与门上数值相加（负扣正加）。
+const MOVING_GATE_START_VALUE = -50;
+const MOVING_GATE_INTERVAL = 12;      // 场上没有追击门时，每隔这么久刷一扇
+const MOVING_GATE_SPAWN_BEHIND = 2;   // 出生在小兵刷新线身后的距离
+const MOVING_GATE_HIT_DEPTH = 0.35;   // 子弹命中判定的纵深半厚
+const MOVING_GATE_RED = new Color(255, 70, 70, 150);
+const MOVING_GATE_BLUE = new Color(70, 140, 255, 150);
+
 // 小兵从远端以散兵形态涌来（随机散布，不排整齐队列），
 // 节奏随时间加压：刷新间隔压缩、每波数量增加，开局仍留出去左路吃道具的时间
 const ENEMY_SPEED = 1.1;
@@ -169,6 +179,8 @@ export class DefenseBridgePrototype extends Component {
     private root: Node | null = null;
     private squadAnchor: Node | null = null;
     private objective: LaneObjective | null = null;
+    private movingGate: { node: Node; material: Material; value: number } | null = null;
+    private movingGateTimer = 0;
     private playerPrefab: Prefab | null = null;
     private propPrefab: Prefab | null = null;
     private bulletPrefab: Prefab | null = null;
@@ -177,6 +189,7 @@ export class DefenseBridgePrototype extends Component {
     private statusLabel: Label | null = null;
     private objectiveHpLabel: Label | null = null;
     private gateBonusLabel: Label | null = null;
+    private movingGateLabel: Label | null = null;
     private bossHpLabel: Label | null = null;
     private camera: Camera | null = null;
     private canvas: Node | null = null;
@@ -220,6 +233,7 @@ export class DefenseBridgePrototype extends Component {
         }
         this.moveBullets(deltaTime);
         this.moveEnemies(deltaTime);
+        this.updateMovingGate(deltaTime);
         this.resolveHits();
         this.resolveContacts();
         if (!this.bossSpawned && this.kills >= ENEMIES_BEFORE_BOSS) {
@@ -381,7 +395,7 @@ export class DefenseBridgePrototype extends Component {
             this.stripNonVisualComponents(node);
             node.setScale(0.9, 0.9, 0.9);
         } else {
-            node = this.createGateNode();
+            node = this.createGatePanel(GATE_PANEL_COLOR).node;
         }
         this.root.addChild(node);
         node.setPosition(LEFT_LANE_X, SURFACE_Y + (isPower ? 0.1 : 0), OBJECTIVE_Z);
@@ -395,10 +409,11 @@ export class DefenseBridgePrototype extends Component {
     }
 
     /**
-     * 运行时构建半透明"光门"竖板，+N 数字由 HUD 投影到门板正中央。
+     * 运行时构建半透明"光门"竖板，数字由 HUD 投影到门板正中央。
+     * 返回材质引用，便于追击门按数值正负切换红/蓝。
      */
-    private createGateNode(): Node {
-        const gate = new Node('SquadGate');
+    private createGatePanel(color: Color): { node: Node; material: Material } {
+        const gate = new Node('LightGate');
         const panel = new Node('GatePanel');
         gate.addChild(panel);
         // 门板中心抬到半高，让门底落在桥面上
@@ -412,9 +427,70 @@ export class DefenseBridgePrototype extends Component {
         const material = new Material();
         // builtin-unlit 的 technique 1 为透明队列
         material.initialize({ effectName: 'builtin-unlit', technique: 1 });
-        material.setProperty('mainColor', GATE_PANEL_COLOR);
+        material.setProperty('mainColor', color);
         renderer.setMaterial(material, 0);
-        return gate;
+        return { node: gate, material };
+    }
+
+    private spawnMovingGate(): void {
+        if (!this.root) {
+            return;
+        }
+        const { node, material } = this.createGatePanel(MOVING_GATE_RED);
+        this.root.addChild(node);
+        node.setPosition(RIGHT_LANE_X, SURFACE_Y, MINION_SPAWN_Z + MOVING_GATE_SPAWN_BEHIND);
+        this.movingGate = { node, material, value: MOVING_GATE_START_VALUE };
+    }
+
+    private updateMovingGate(deltaTime: number): void {
+        const gate = this.movingGate;
+        if (!gate) {
+            // 场上没有追击门时计时补刷（boss 阶段不再刷新）
+            if (!this.bossSpawned) {
+                this.movingGateTimer += deltaTime;
+                if (this.movingGateTimer >= MOVING_GATE_INTERVAL) {
+                    this.movingGateTimer = 0;
+                    this.spawnMovingGate();
+                }
+            }
+            return;
+        }
+        gate.node.getPosition(this.tempPosition);
+        this.tempPosition.z -= ENEMY_SPEED * deltaTime;
+        gate.node.setPosition(this.tempPosition);
+        // 门走到主角所在纵深：横向与主角重叠即结算人数加减
+        if (this.tempPosition.z <= PLAYER_Z && this.squadAnchor
+            && Math.abs(this.tempPosition.x - this.squadAnchor.position.x) <= GATE_WIDTH / 2 + 0.2) {
+            this.applyMovingGateValue(gate.value);
+            this.destroyMovingGate();
+            return;
+        }
+        // 主角没接住，从桥尾走掉
+        if (this.tempPosition.z <= ENEMY_PASS_Z) {
+            this.destroyMovingGate();
+        }
+    }
+
+    private applyMovingGateValue(value: number): void {
+        if (value > 0) {
+            this.addSquadMembers(value);
+        } else if (value < 0) {
+            this.removeSquadMembers(-value);
+        }
+    }
+
+    private removeSquadMembers(count: number): void {
+        for (let i = 0; i < count && this.squadMembers.length > 0; i += 1) {
+            this.killSquadMember(this.squadMembers.length - 1);
+        }
+    }
+
+    private destroyMovingGate(): void {
+        if (this.movingGate) {
+            this.movingGate.node.destroy();
+            this.movingGate = null;
+        }
+        this.movingGateTimer = 0;
     }
 
     private applyObjectiveReward(objective: LaneObjective): void {
@@ -464,9 +540,12 @@ export class DefenseBridgePrototype extends Component {
         this.objectiveHpLabel = this.createLabel(canvas, 0, 0, 40, Color.WHITE);
         // 数字门的 +N 奖励数字单独贴在门体上，避免和血量混在一起引起误解
         this.gateBonusLabel = this.createLabel(canvas, 0, 0, 56, new Color(140, 255, 120, 255));
+        // 追击数字门的当前数值，投影在门板中央
+        this.movingGateLabel = this.createLabel(canvas, 0, 0, 52, Color.WHITE);
         this.bossHpLabel = this.createLabel(canvas, 0, 0, 46, new Color(255, 229, 100, 255));
         this.objectiveHpLabel.node.active = false;
         this.gateBonusLabel.node.active = false;
+        this.movingGateLabel.node.active = false;
         this.bossHpLabel.node.active = false;
     }
 
@@ -682,6 +761,7 @@ export class DefenseBridgePrototype extends Component {
                     continue;
                 }
             }
+            let consumed = false;
             for (let enemyIndex = this.enemies.length - 1; enemyIndex >= 0; enemyIndex -= 1) {
                 const enemy = this.enemies[enemyIndex];
                 const radius = enemy.boss ? BOSS_HIT_RADIUS : MINION_HIT_RADIUS;
@@ -693,6 +773,7 @@ export class DefenseBridgePrototype extends Component {
                 this.flashTarget(enemy);
                 bullet.destroy();
                 this.bullets.splice(bulletIndex, 1);
+                consumed = true;
                 if (enemy.hp <= 0) {
                     this.enemies.splice(enemyIndex, 1);
                     if (enemy.boss) {
@@ -703,6 +784,20 @@ export class DefenseBridgePrototype extends Component {
                     this.playDeath(enemy);
                 }
                 break;
+            }
+            if (consumed) {
+                continue;
+            }
+            // 追击数字门在小兵身后：漏过小兵的子弹才会打到它，每次命中数值 +1
+            const gate = this.movingGate;
+            if (gate
+                && Math.abs(bullet.position.x - gate.node.position.x) <= GATE_WIDTH / 2
+                && Math.abs(bullet.position.z - gate.node.position.z) <= MOVING_GATE_HIT_DEPTH) {
+                gate.value += 1;
+                gate.material.setProperty('mainColor', gate.value > 0 ? MOVING_GATE_BLUE : MOVING_GATE_RED);
+                this.spawnHitEffect(bullet.position);
+                bullet.destroy();
+                this.bullets.splice(bulletIndex, 1);
             }
         }
     }
@@ -771,6 +866,9 @@ export class DefenseBridgePrototype extends Component {
             isGate ? GATE_LABEL_HEIGHT : POWER_LABEL_HEIGHT, objective ? `${objective.hp}` : '');
         this.updateOverheadLabel(this.gateBonusLabel, isGate ? objective!.node : null,
             GATE_BONUS_LABEL_HEIGHT, isGate ? `+${objective!.bonus}` : '');
+        const movingGate = this.movingGate && this.movingGate.node.isValid ? this.movingGate : null;
+        this.updateOverheadLabel(this.movingGateLabel, movingGate?.node ?? null, GATE_HEIGHT / 2,
+            movingGate ? (movingGate.value > 0 ? `+${movingGate.value}` : `${movingGate.value}`) : '');
         const boss = this.enemies.find((enemy) => enemy.boss);
         this.updateOverheadLabel(this.bossHpLabel, boss?.node ?? null, BOSS_LABEL_HEIGHT, boss ? `${boss.hp}` : '');
     }
