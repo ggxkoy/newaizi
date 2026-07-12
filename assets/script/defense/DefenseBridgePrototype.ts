@@ -16,11 +16,13 @@ import {
     Node,
     ParticleSystem,
     Prefab,
+    primitives,
     resources,
     SkeletalAnimation,
     SkinnedMeshRenderer,
     tween,
     UITransform,
+    utils,
     Vec3,
 } from 'cc';
 
@@ -109,6 +111,12 @@ const GATE_BASE_HP = 20;
 const GATE_HP_PER_CYCLE = 8;
 const OBJECTIVE_RESPAWN_DELAY = 2;
 
+// 数字门是运行时生成的半透明"光门"竖板，+N 数字投影在门板正中央
+const GATE_WIDTH = 1.8;
+const GATE_HEIGHT = 2.2;
+const GATE_THICKNESS = 0.12;
+const GATE_PANEL_COLOR = new Color(70, 140, 255, 150);
+
 // 小兵从远端以散兵形态涌来（随机散布，不排整齐队列），
 // 节奏随时间加压：刷新间隔压缩、每波数量增加，开局仍留出去左路吃道具的时间
 const ENEMY_SPEED = 1.1;
@@ -124,9 +132,9 @@ const MAX_ALIVE_MINIONS = 80;
 
 // 头顶血量数字相对目标原点的高度
 const POWER_LABEL_HEIGHT = 1.6;
-const GATE_LABEL_HEIGHT = 2.2;
-// 数字门的 +N 奖励数字贴在门体正面中部，与血量分开显示
-const GATE_BONUS_LABEL_HEIGHT = 1.0;
+const GATE_LABEL_HEIGHT = GATE_HEIGHT + 0.4;
+// +N 奖励数字放在光门板的正中心（门板一半高度处）
+const GATE_BONUS_LABEL_HEIGHT = GATE_HEIGHT / 2;
 const BOSS_LABEL_HEIGHT = 2.2;
 
 // 小人（manAll.FBX）与 boss（bossAll.FBX）自带的骨骼动画 clip 名
@@ -163,7 +171,6 @@ export class DefenseBridgePrototype extends Component {
     private objective: LaneObjective | null = null;
     private playerPrefab: Prefab | null = null;
     private propPrefab: Prefab | null = null;
-    private gatePrefab: Prefab | null = null;
     private bulletPrefab: Prefab | null = null;
     private tracerPrefab: Prefab | null = null;
     private hitEffectPrefab: Prefab | null = null;
@@ -231,11 +238,10 @@ export class DefenseBridgePrototype extends Component {
         if (!scene) {
             throw new Error('DefenseBridgePrototype: active scene is required.');
         }
-        const [playerPrefab, roadPrefab, propPrefab, gatePrefab, bulletPrefab, tracerPrefab, hitEffectPrefab] = await Promise.all([
+        const [playerPrefab, roadPrefab, propPrefab, bulletPrefab, tracerPrefab, hitEffectPrefab] = await Promise.all([
             this.loadPrefab('prefab/model/man/player'),
             this.loadPrefab('map/road/road01'),
             this.loadPrefab('map/box/box'),
-            this.loadPrefab('map/organ/organDoor'),
             this.loadPrefab('map/diamond/diamond'),
             this.loadPrefab('prefab/effect/flyLight/flyLight'),
             this.loadPrefab('prefab/effect/hit/hit'),
@@ -245,7 +251,6 @@ export class DefenseBridgePrototype extends Component {
         this.root = root;
         this.playerPrefab = playerPrefab;
         this.propPrefab = propPrefab;
-        this.gatePrefab = gatePrefab;
         this.bulletPrefab = bulletPrefab;
         this.tracerPrefab = tracerPrefab;
         this.hitEffectPrefab = hitEffectPrefab;
@@ -367,15 +372,19 @@ export class DefenseBridgePrototype extends Component {
         }
         const isPower = this.objectiveIndex % 2 === 0;
         const cycle = Math.floor(this.objectiveIndex / 2);
-        const prefab = isPower ? this.propPrefab : this.gatePrefab;
-        if (!prefab) {
-            return;
+        let node: Node;
+        if (isPower) {
+            if (!this.propPrefab) {
+                return;
+            }
+            node = instantiate(this.propPrefab);
+            this.stripNonVisualComponents(node);
+            node.setScale(0.9, 0.9, 0.9);
+        } else {
+            node = this.createGateNode();
         }
-        const node = instantiate(prefab);
-        this.stripNonVisualComponents(node);
         this.root.addChild(node);
         node.setPosition(LEFT_LANE_X, SURFACE_Y + (isPower ? 0.1 : 0), OBJECTIVE_Z);
-        node.setScale(0.9, 0.9, 0.9);
         this.objective = {
             node,
             kind: isPower ? 'power' : 'squad',
@@ -383,6 +392,29 @@ export class DefenseBridgePrototype extends Component {
             hp: isPower ? POWER_BASE_HP + cycle * POWER_HP_PER_CYCLE : GATE_BASE_HP + cycle * GATE_HP_PER_CYCLE,
         };
         this.objectiveIndex += 1;
+    }
+
+    /**
+     * 运行时构建半透明"光门"竖板，+N 数字由 HUD 投影到门板正中央。
+     */
+    private createGateNode(): Node {
+        const gate = new Node('SquadGate');
+        const panel = new Node('GatePanel');
+        gate.addChild(panel);
+        // 门板中心抬到半高，让门底落在桥面上
+        panel.setPosition(0, GATE_HEIGHT / 2, 0);
+        const renderer = panel.addComponent(MeshRenderer);
+        renderer.mesh = utils.MeshUtils.createMesh(primitives.box({
+            width: GATE_WIDTH,
+            height: GATE_HEIGHT,
+            length: GATE_THICKNESS,
+        }));
+        const material = new Material();
+        // builtin-unlit 的 technique 1 为透明队列
+        material.initialize({ effectName: 'builtin-unlit', technique: 1 });
+        material.setProperty('mainColor', GATE_PANEL_COLOR);
+        renderer.setMaterial(material, 0);
+        return gate;
     }
 
     private applyObjectiveReward(objective: LaneObjective): void {
