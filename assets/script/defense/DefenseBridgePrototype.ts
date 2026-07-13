@@ -34,6 +34,7 @@ interface MovingTarget {
     hp: number;
     speed: number;
     boss: boolean;
+    charging: boolean;
 }
 
 // 左路目标物：火力道具（power）与 +N 数字门（squad）轮流出现
@@ -130,6 +131,9 @@ const MOVING_GATE_BLUE = new Color(70, 140, 255, 150);
 // 小兵从远端以散兵形态涌来（随机散布，不排整齐队列），
 // 节奏随时间加压：刷新间隔压缩、每波数量增加，开局仍留出去左路吃道具的时间
 const ENEMY_SPEED = 1.1;
+// 小兵走近主角后自动索敌：锁定编队方向加速冲锋，不会直线走过头跑掉
+const CHARGE_TRIGGER_DISTANCE = 4.5; // 距主角纵深多少米时触发冲锋
+const ENEMY_CHARGE_SPEED = 1.8;
 const ENEMY_LANE_HALF_WIDTH = 0.95; // 右半幅内的横向散布半宽
 const ENEMY_SPAWN_Z_SCATTER = 1.5;  // 每波在纵深方向的散布
 const SPAWN_INTERVAL_START = 1.0;
@@ -642,7 +646,7 @@ export class DefenseBridgePrototype extends Component {
             material?.setProperty('mainColor', ENEMY_COLOR);
         }
         this.playClip(node, boss ? BOSS_IDLE_CLIP : ENEMY_RUN_CLIP, true);
-        this.enemies.push({ node, material, hp: boss ? 20 : 1, speed: boss ? 0.8 : ENEMY_SPEED, boss });
+        this.enemies.push({ node, material, hp: boss ? 20 : 1, speed: boss ? 0.8 : ENEMY_SPEED, boss, charging: false });
     }
 
     private getBodyMaterial(characterRoot: Node): Material | null {
@@ -676,10 +680,30 @@ export class DefenseBridgePrototype extends Component {
     }
 
     private moveEnemies(deltaTime: number): void {
+        const anchor = this.squadAnchor;
         for (let index = this.enemies.length - 1; index >= 0; index -= 1) {
             const enemy = this.enemies[index];
             enemy.node.getPosition(this.tempPosition);
-            this.tempPosition.z -= enemy.speed * deltaTime;
+            // 小兵进入主角前方触发距离后转为索敌冲锋（boss 保持直线压进）
+            if (!enemy.boss && !enemy.charging && anchor && this.squadMembers.length > 0
+                && this.tempPosition.z <= PLAYER_Z + CHARGE_TRIGGER_DISTANCE) {
+                enemy.charging = true;
+                enemy.speed = ENEMY_CHARGE_SPEED;
+            }
+            if (enemy.charging && anchor && this.squadMembers.length > 0) {
+                // 朝编队锚点方向追击，并转身面向冲锋方向
+                const dx = anchor.position.x - this.tempPosition.x;
+                const dz = anchor.position.z - this.tempPosition.z;
+                const length = Math.sqrt(dx * dx + dz * dz);
+                if (length > 1e-4) {
+                    this.tempPosition.x += (dx / length) * enemy.speed * deltaTime;
+                    this.tempPosition.z += (dz / length) * enemy.speed * deltaTime;
+                    // 模型原生朝 +z，yaw = atan2(dx, dz) 即面向移动方向
+                    enemy.node.setRotationFromEuler(0, Math.atan2(dx, dz) * 180 / Math.PI, 0);
+                }
+            } else {
+                this.tempPosition.z -= enemy.speed * deltaTime;
+            }
             enemy.node.setPosition(this.tempPosition);
             // 越过整个编队纵深仍未接触到任何队员，从桥尾走掉
             if (this.tempPosition.z <= ENEMY_PASS_Z) {
