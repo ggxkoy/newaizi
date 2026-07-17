@@ -61,8 +61,9 @@ const BRIDGE_END_Z = 18;
 const LEFT_LANE_X = 1.25;
 const RIGHT_LANE_X = -1.25;
 const PLAYER_Z = -4.2;
-// 锚点活动范围要给编队宽度（±0.85）留出余量，避免队员走出桥沿
-const PLAYER_X_LIMIT = 1.65;
+// 锚点活动范围要给编队宽度（±0.55）留出余量，避免队员走出桥沿；
+// 同时上限必须让单人时的火力（锚点 x + 命中半径）覆盖到小兵散布的最外沿
+const PLAYER_X_LIMIT = 1.75;
 
 // 角色相对 5m 桥宽的比例（小人模型净高 1.74m）
 const PLAYER_SCALE = 0.55;
@@ -70,14 +71,14 @@ const PLAYER_SCALE = 0.55;
 const MINION_SCALE = 0.4;
 const BOSS_SCALE = 1;
 
-// 小队编队：锚点在队首，后续队员向后按行排开
+// 小队编队：锚点在队首，队员紧凑抱团（间距 ~0.3），加人后整体仍是一小簇
 const FORMATION_OFFSETS = [
     new Vec3(0, 0, 0),
-    new Vec3(-0.5, 0, -0.45), new Vec3(0.5, 0, -0.45),
-    new Vec3(-0.85, 0, -0.95), new Vec3(0, 0, -0.95), new Vec3(0.85, 0, -0.95),
-    new Vec3(-0.5, 0, -1.45), new Vec3(0.5, 0, -1.45),
-    new Vec3(-0.85, 0, -1.95), new Vec3(0, 0, -1.95), new Vec3(0.85, 0, -1.95),
-    new Vec3(0, 0, -2.45),
+    new Vec3(-0.3, 0, -0.25), new Vec3(0.3, 0, -0.25),
+    new Vec3(-0.55, 0, -0.55), new Vec3(0, 0, -0.5), new Vec3(0.55, 0, -0.55),
+    new Vec3(-0.3, 0, -0.8), new Vec3(0.3, 0, -0.8),
+    new Vec3(-0.55, 0, -1.05), new Vec3(0, 0, -1.05), new Vec3(0.55, 0, -1.05),
+    new Vec3(0, 0, -1.3),
 ];
 
 const BULLET_RANGE = 16;
@@ -134,7 +135,9 @@ const ENEMY_SPEED = 1.1;
 // 小兵走近主角后自动索敌：锁定编队方向加速冲锋，不会直线走过头跑掉
 const CHARGE_TRIGGER_DISTANCE = 4.5; // 距主角纵深多少米时触发冲锋
 const ENEMY_CHARGE_SPEED = 1.8;
-const ENEMY_LANE_HALF_WIDTH = 0.95; // 右半幅内的横向散布半宽
+// 右半幅内的横向散布半宽：最外沿 |x| = 1.25 + 0.8 = 2.05，
+// 必须 ≤ 主角单人火力覆盖（PLAYER_X_LIMIT 1.75 + 命中半径 0.4），否则出现打不到的死角
+const ENEMY_LANE_HALF_WIDTH = 0.8;
 const ENEMY_SPAWN_Z_SCATTER = 1.5;  // 每波在纵深方向的散布
 const SPAWN_INTERVAL_START = 1.0;
 const SPAWN_INTERVAL_END = 0.45;
@@ -828,10 +831,12 @@ export class DefenseBridgePrototype extends Component {
 
     private playDeath(target: MovingTarget): void {
         const node = target.node;
-        // 死亡变灰（boss 材质带贴图，mainColor 变灰表现为整体压暗）
+        // 死亡变灰（boss 材质带贴图，mainColor 变灰表现为整体压暗）。
+        // 注意：不要在这里清掉 emissive——小兵 1 滴血、命中即死，
+        // 受击闪白全靠 flashTarget 点亮的自发光在死亡后头 80ms 继续显示，
+        // 之后由 flashTarget 的定时回调恢复为黑色。
         if (target.material) {
             target.material.setProperty('mainColor', DEATH_GRAY);
-            target.material.setProperty('emissive', Color.BLACK);
         }
         if (target.boss) {
             const played = this.playClip(node, BOSS_DIE_CLIP, false, () => {
