@@ -81,7 +81,11 @@ const FORMATION_OFFSETS = [
     new Vec3(0, 0, -1.3),
 ];
 
-const BULLET_RANGE = 16;
+// 初始射程有限（但必须够到 z=5.2 的左路道具，否则第一个升级都吃不到），
+// 每次武器升级增加射程
+const BULLET_BASE_RANGE = 10;
+const BULLET_RANGE_PER_UPGRADE = 2;
+const BULLET_MAX_RANGE = 16;
 const BULLET_SPEED = 10;
 const BULLET_HEIGHT = 0.5; // 子弹相对桥面的飞行高度（小兵胸口）
 const BULLET_CORE_SCALE = 0.3;
@@ -171,11 +175,9 @@ const HIT_FLASH_COLOR = new Color(255, 255, 255, 255);
 const HIT_FLASH_SECONDS = 0.08;
 // 死亡后尸体变灰（对带贴图的 boss 则表现为整体压暗）
 const DEATH_GRAY = new Color(110, 110, 110, 255);
-// 小兵死亡击飞：先向后上方抛起，再坠落，最后缩没消失
-const KNOCKBACK_RISE = new Vec3(0, 1.6, 2.8);
-const KNOCKBACK_FALL = new Vec3(0, -3.0, 1.6);
-const ENEMY_FLY_START_CLIP = 'hitFly01';
-const ENEMY_FLY_LOOP_CLIP = 'hitFly02';
+// 小兵死亡：播放 die（后仰倒地）向自己身后倒下，同时轻微后滑，最后缩没
+const ENEMY_DIE_CLIP = 'die';
+const DEATH_FALL_SLIDE = 0.5;
 
 @ccclass('DefenseBridgePrototype')
 export class DefenseBridgePrototype extends Component {
@@ -213,6 +215,7 @@ export class DefenseBridgePrototype extends Component {
     private bossSpawned = false;
     private bossDefeated = false;
     private gameOver = false;
+    private defeatShown = false;
     private initialized = false;
 
     protected start(): void {
@@ -224,6 +227,7 @@ export class DefenseBridgePrototype extends Component {
             return;
         }
         if (this.gameOver) {
+            this.showDefeatUi();
             this.refreshHud();
             return;
         }
@@ -669,13 +673,17 @@ export class DefenseBridgePrototype extends Component {
         }, HIT_FLASH_SECONDS);
     }
 
+    private currentBulletRange(): number {
+        return Math.min(BULLET_MAX_RANGE, BULLET_BASE_RANGE + this.upgradeLevel * BULLET_RANGE_PER_UPGRADE);
+    }
+
     private moveBullets(deltaTime: number): void {
         for (let index = this.bullets.length - 1; index >= 0; index -= 1) {
             const bullet = this.bullets[index];
             bullet.getPosition(this.tempPosition);
             this.tempPosition.z += BULLET_SPEED * deltaTime;
             bullet.setPosition(this.tempPosition);
-            if (this.tempPosition.z - PLAYER_Z > BULLET_RANGE) {
+            if (this.tempPosition.z - PLAYER_Z > this.currentBulletRange()) {
                 bullet.destroy();
                 this.bullets.splice(index, 1);
             }
@@ -849,15 +857,18 @@ export class DefenseBridgePrototype extends Component {
                 return;
             }
         } else {
-            // 小兵被击飞：向后上方抛起、坠落，最后缩没消失
-            this.playClip(node, ENEMY_FLY_START_CLIP, false, () => {
-                if (node.isValid) {
-                    this.playClip(node, ENEMY_FLY_LOOP_CLIP, true);
-                }
-            });
+            // 小兵向自己身后倒下：die 是后仰倒地动画（相对模型朝向自动朝身后倒），
+            // 同时沿远离主角编队的方向轻微滑退，倒地停留片刻后缩没
+            this.playClip(node, ENEMY_DIE_CLIP, false);
+            const backX = node.worldPosition.x - (this.squadAnchor?.worldPosition.x ?? node.worldPosition.x);
+            const backZ = node.worldPosition.z - (this.squadAnchor?.worldPosition.z ?? (node.worldPosition.z - 1));
+            const length = Math.sqrt(backX * backX + backZ * backZ);
+            const slide = length > 1e-4
+                ? new Vec3((backX / length) * DEATH_FALL_SLIDE, 0, (backZ / length) * DEATH_FALL_SLIDE)
+                : new Vec3(0, 0, DEATH_FALL_SLIDE);
             tween(node)
-                .by(0.4, { position: KNOCKBACK_RISE.clone() }, { easing: 'sineOut' })
-                .by(0.4, { position: KNOCKBACK_FALL.clone() }, { easing: 'sineIn' })
+                .by(0.4, { position: slide }, { easing: 'sineOut' })
+                .delay(0.6)
                 .to(0.15, { scale: new Vec3(0, 0, 0) })
                 .call(() => {
                     if (node.isValid) {
@@ -872,6 +883,30 @@ export class DefenseBridgePrototype extends Component {
                 node.destroy();
             }
         }, CORPSE_FALLBACK_SECONDS);
+    }
+
+    /**
+     * 失败界面：DEFEAT 大字 + 点击重开（重新加载当前场景，一切从头初始化）
+     */
+    private showDefeatUi(): void {
+        if (this.defeatShown || !this.canvas) {
+            return;
+        }
+        this.defeatShown = true;
+        const defeat = this.createLabel(this.canvas, 0, 120, 96, new Color(255, 80, 80, 255));
+        defeat.string = 'DEFEAT';
+        defeat.isBold = true;
+        const restart = this.createLabel(this.canvas, 0, -60, 40, Color.WHITE);
+        restart.string = '点击重新开始';
+        restart.node.getComponent(UITransform)?.setContentSize(520, 140);
+        restart.node.on(Node.EventType.TOUCH_END, this.restartGame, this);
+    }
+
+    private restartGame(): void {
+        const scene = director.getScene();
+        if (scene?.name) {
+            director.loadScene(scene.name);
+        }
     }
 
     private refreshHud(): void {
